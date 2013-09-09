@@ -1,3 +1,4 @@
+from Bio.pairwise2 import align
 
 ###
 def check_match_SW(seq, match_seqs):
