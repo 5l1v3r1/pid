@@ -33,7 +33,8 @@ if (len(sys.argv)==2):
     path_to_templates='../templates/'
     #path_to_input_dir = relative_path_to_temp_directory[:13] # "../templates/" 
     #temp_directory_basename = input_directory_name[13:] # "../templates/" to remove
-    temp_directory_basename = relative_path_to_temp_directory[-2]
+    temp_directory_basename = relative_path_to_temp_directory.split('/')[-2]
+    print temp_directory_basename
     [prefix_date_and_id, bc]= [temp_directory_basename.split('_')[i] for i in [0,2]]
     prefix_date_and_id = prefix_date_and_id[len('dir-'):] # "dir-" to remove
     #if bc[-1]=='/':

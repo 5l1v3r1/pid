@@ -51,7 +51,7 @@ if (len(sys.argv) == 2):
     #import the file containing, for the given barcode, the sequences for each pID
     #generate the pID specific temp files for alignments
     with open(relative_path_to_filtered_reads_file, 'r') as input_file:
-        [prefix_date_and_id, res.barcode] = [filtered_reads_file_basename).split('_')[i] for i in [0,1]]
+        [prefix_date_and_id, res.barcode] = [filtered_reads_file_basename.split('_')[i] for i in [0,1]]
         count=0
         for record in SeqIO.parse(input_file, 'fasta'):
             pID = str(record.id.split('_')[0])
