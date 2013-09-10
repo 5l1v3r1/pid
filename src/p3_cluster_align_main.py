@@ -21,8 +21,7 @@ if(len(sys.argv)==2):
     cluster_dir_base_name = cluster_dir[len(path_to_dir):] # "../templates/" to remove
     
     #collect the list of temp reads files to align
-    list_temp_files = os.popen(str('ls '+cluster_dir+'*')).readlines()
-    list_temp_files = [file_to_strip.strip() for file_to_strip in list_temp_files]
+    list_temp_files = glob.glob(cluster_dir+'*')
     print list_temp_files
     #run one job per file to align on the cluster
     for cur_file in list_temp_files:

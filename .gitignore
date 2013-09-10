@@ -6,7 +6,9 @@
 auto
 .~*
 *fasta
+*fastq
 region_.tex
+*txt
 
 ### /home/fabio/.gitignore-boilerplates/Global/vim.gitignore
 *tar.gz

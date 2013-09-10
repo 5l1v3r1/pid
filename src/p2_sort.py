@@ -45,6 +45,7 @@ if (len(sys.argv) == 2):
     relative_path_to_filtered_reads_file = str(sys.argv[1])
     path_to_data_file = "../data/"
     path_to_templates = "../templates/"
+    lt.check_and_create_directory(path_to_templates)
     filtered_reads_file_basename = relative_path_to_filtered_reads_file.split('/')[-1]
     dict_pIDs = defaultdict(list)
     
