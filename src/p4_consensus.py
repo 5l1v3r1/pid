@@ -90,6 +90,7 @@ if __name__=='__main__':
                 out_file.write(dict_consensus_seq[pID][0]+'\n')
 
 
+
     else:
         print auto_file_name+': usage: '+auto_file_name+' <aligned reads files directory (in ../templates/)>'
 

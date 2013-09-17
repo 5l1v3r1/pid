@@ -26,16 +26,16 @@ if(len(sys.argv)==2):
     # parse the input consensus sequences file name
     relative_path_to_cons_seq_file=str(sys.argv[1])
     path_to_templates = "../templates/"
-    cons_seq_file_basename = relative_path_to_cons_seq_file.split('/')[3]
+    cons_seq_file_basename = lt.get_last_part_of_path(relative_path_to_cons_seq_file)
     
-    [prefix_date_and_id,file_type,barcode] = [cons_seq_file_basename.split('_')[i] for i in [0,1,2]]
-    barcode = barcode.split('.')[0] # remove file extension ".fasta"
+    [prefix_date_and_id,file_type,barcode] = [lt.trim_extension(cons_seq_file_basename).split('_')[i] for i in [0,1,2]]
 
     # create (if necessary) the consensus directory
-    lt.check_and_create_directory(str(path_to_templates+'dir-'+prefix_date_and_id+'_align-global'))
+    outpath = path_to_templates+'dir-'+prefix_date_and_id+'_align-global'
+    lt.check_and_create_directory(outpath)
     
     # align
-    aligned_cons_seq_file_name = str(path_to_templates+'dir-'+prefix_date_and_id+'_align-global/'+prefix_date_and_id+'_align-global_'+barcode+'.fasta') 
+    aligned_cons_seq_file_name = outpath+'/'+prefix_date_and_id+'_align-global_'+barcode+'.fasta'
     print 'Global consensus sequences alignment for barcode: ' + barcode + ' (from file: ' + relative_path_to_cons_seq_file + ' )'
 
     cline = MuscleCommandline(input = relative_path_to_cons_seq_file, out = aligned_cons_seq_file_name)

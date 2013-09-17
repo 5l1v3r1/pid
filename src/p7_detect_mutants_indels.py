@@ -22,7 +22,7 @@ import operator
 import sys
 import datetime
 import time
-#import lib_tools as lt
+import lib_tools as lt
 
 auto_file_name = str(sys.argv[0])
 
@@ -33,6 +33,10 @@ DIST_MAX = 3
 # minimum #times a pID must occur to have neighbors 
 MIN_OCC_MOST_ABUND_PID = 10
 
+min_pid_alignment_score = 8.4
+# anyting >9 does not allow any substitions
+# anythin >8.4 allows only one point mutation
+# >8 allows one indel and one substitution
 
 
 
@@ -49,81 +53,45 @@ if (len(sys.argv) == 3):
     path_to_data = '../data/'
     path_to_templates = '../templates/'
     
-    filtered_reads_file_basename = relative_path_to_filtered_reads_file.split('/')[2]
-    cons_seq_file_basename = relative_path_to_cons_seq_file.split('/')[3]
+    filtered_reads_file_basename = lt.get_last_part_of_path(relative_path_to_filtered_reads_file)
+    cons_seq_file_basename = lt.get_last_part_of_path(relative_path_to_cons_seq_file)
 
-    [prefix_date_and_id, barcode] = [filtered_reads_file_basename.split('_')[i] for i in [0,1]]
-    [prefix_date_and_id_cs, barcode_cs] = [cons_seq_file_basename.split('_')[i] for i in [0,2]]
-    barcode_cs = barcode_cs.split('.')[0] # remove ".fasta"
+    [prefix_date_and_id, barcode] = [lt.trim_extension(filtered_reads_file_basename).split('_')[i] for i in [0,1]]
+    [prefix_date_and_id_cs, barcode_cs] = [lt.trim_extension(cons_seq_file_basename).split('_')[i] for i in [0,2]]
 
     # check the similarity
     if ((barcode == barcode_cs) and (prefix_date_and_id == prefix_date_and_id_cs)):
       
         # 1. Create the dictionary of pIDs (from the output files of p1_trim_and_filter)
         
-        # dictionary containing the list of reads (values) associated to a pID (keys)
-        dict_all_reads = defaultdict(list)
-
-        # dictionary containing the consensus sequence (values) associated to a pID (keys) if it occurs at least 3 times
-        dict_cons_seq = defaultdict(list)
-
-        count_reads_with_invalid_pID = 0
-        count_reads_added_to_dict_all_reads = 0
-
         ###################################
         # -- READ THE FILTERED READS FILE #
         ###################################
-        with open(relative_path_to_filtered_reads_file, 'r') as filtered_reads_file:
-            # for all the valid reads (without Ns), add the read to dict_all_reads
-            for record in SeqIO.parse(filtered_reads_file, 'fasta'):
-                [pID,nb_reads_fwd,nb_reads_rev] = [record.id.split('_')[i] for i in [0,1,2]]
-                nb_reads_fwd = int(nb_reads_fwd)
-                nb_reads_rev = int(nb_reads_rev)
-                # (pID,identity,direction) = (str(record.id.split('_')[0]),str(record.id.split('_')[1]),str(record.id.split('_')[2]))
-                seq = str(record.seq)
-                if (pID.count('N') == 0): # if the pID is not ambiguous
-                    dict_all_reads[pID].append([nb_reads_fwd,nb_reads_rev,seq])
-                    count_reads_added_to_dict_all_reads += (nb_reads_fwd+nb_reads_rev)
-                else:
-                    #print 'Invalid pID: ' + pID
-                    count_reads_with_invalid_pID += (nb_reads_fwd+nb_reads_rev)
-
+        # dictionary containing the list of reads (values) associated to a pID (keys)
+        dict_all_reads, count_reads_added_to_dict_all_reads, count_reads_with_invalid_pID = lt.parse_readfile(relative_path_to_filtered_reads_file)
         # control prints
         ####
         print 'count_reads_with_invalid_pID: '+str(count_reads_with_invalid_pID)
         print 'count_reads_added_to_dict_all_reads: '+str(count_reads_added_to_dict_all_reads)
         print '#pIDs different: '+str(len(dict_all_reads.keys()))
         
-        count_pIDs_occ = Counter()
-            
-        for pID in dict_all_reads.keys():
-            nb_reads_diff = len(dict_all_reads[pID])
-            for i in range(nb_reads_diff):
-                nb_cur_reads = sum([dict_all_reads[pID][i][j] for j in [0,1]])
-                count_pIDs_occ[((nb_cur_reads >= 3) and '3+') or ((nb_cur_reads == 2) and '2') or ('1')] += 1
 
-        print '#pIDs occurring only once: ' + str(count_pIDs_occ['1'])#str(len(list_pIDs_occurring_once))
-        print '#pIDs occurring only twice: ' + str(count_pIDs_occ['2'])#str(len(list_pIDs_occurring_twice))
-        print '#pIDs occurring at least 3 times: ' + str(count_pIDs_occ['3+'])#str(len(list_pIDs_occurring_at_least_3_times))
+        pID_abundance = {}
+            
+        for pID,reads in dict_all_reads.iteritems():
+            pID_abundance[pID] = sum([x[0]+x[1] for x in reads])
+
+        print '#pIDs occurring only once: ' + str([x==1 for x in pID_abundance.values()])
+        print '#pIDs occurring only twice: ' + str([x==2 for x in pID_abundance.values()])
+        print '#pIDs occurring at least 3 times: ' + str([x>2 for x in pID_abundance.values()])
         ####
 
         
         ########################################
         # -- READ THE CONSENSUS SEQUENCES FILE #
         ########################################
-        # normally, this reading of the consensus file should not modify the list of pIDs (keys of dict_all_reads)
-        with open(relative_path_to_cons_seq_file, 'r') as cons_seq_file:
-            for record in SeqIO.parse(cons_seq_file, 'fasta'):
-                [pID,nb_occ_fwd,nb_occ_rev] = [record.id.split('_')[i] for i in [0,1,2]]
-                nb_occ_fwd = int(nb_occ_fwd)
-                nb_occ_rev = int(nb_occ_rev)
-                cons_seq = str(record.seq)
-                #if (pID in dict_all_reads.keys()): # should always be the case
-                #    if (len(dict_all_reads[pID]) > 2): # if the pID occurs more than twice
-                # 
-                #else:
-                #    print 'ERROR: pID ' + pID + ' present in the consensus sequences file but not in the filtered reads file !!!'
-                dict_cons_seq[pID].append([nb_occ_fwd,nb_occ_rev,cons_seq])
+        # dictionary containing the consensus sequence (values) associated to a pID (keys) if it occurs at least 3 times
+        dict_cons_seq, a, b = lt.parse_readfile(relative_path_to_cons_seq_file)
         print 'From consensus seq. file :'
         print '#pIDs occurring at least 3 times: ' + str(len(dict_cons_seq.keys()))
         
@@ -136,87 +104,59 @@ if (len(sys.argv) == 3):
         for pID in dict_all_reads.keys():
             dict_neighbor_state_pIDs[pID] = False
         
-        # sorted list of the #occurrences of each pID: couples (#occ, pID)
-        list_occ_pIDs_dec = [(sum([dict_cons_seq[pID][i][0]+dict_cons_seq[pID][i][1] for i in range(len(dict_cons_seq[pID]))]), pID) for pID in dict_cons_seq.keys()]
-        list_occ_pIDs_inc = [(sum([dict_cons_seq[pID][i][0]+dict_cons_seq[pID][i][1] for i in range(len(dict_cons_seq[pID]))]), pID) for pID in dict_cons_seq.keys()]
-        #list_occ_pIDs_inc = [(dict_cons_seq[pID][0][0]), pID) for pID in dict_cons_seq.keys()]
-        
-        # -- add the pIDs with #occurrences < 3 from dict_all_reads to list_occ_pIDs
-        for pID in dict_all_reads.keys():
-            nb_occ_cur_pID = 0
-            for i in range(len(dict_all_reads[pID])):
-                nb_occ_cur_pID += sum([dict_all_reads[pID][i][j] for j in [0,1]]) # add nb_occ_fwd and nb_occ_rev
-            if nb_occ_cur_pID < 3:
-                list_occ_pIDs_dec.append((nb_occ_cur_pID,pID))
-                list_occ_pIDs_inc.append((nb_occ_cur_pID,pID))
-        list_occ_pIDs_dec.sort(key = lambda couple: couple[0], reverse=True)
-        list_occ_pIDs_inc.sort(key = lambda couple: couple[0])
+        list_occ_pIDs_dec = sorted(pID_abundance.items(), key = lambda x:x[0], reverse=True)
+        list_occ_pIDs_inc = list_occ_pIDs_dec[::-1]
 
         print 'Check list_occ_pIDs_dec and list_occ_pIDs_inc lengths (should be equal): '        
-        print len(list_occ_pIDs_dec)
-        print len(list_occ_pIDs_inc)
+        print len(list_occ_pIDs_dec), len(list_occ_pIDs_inc)
          
-
         # dictionary containing the parent pID (values) of a given pID (keys)
         dict_neighbor_of = defaultdict(list)
+        dict_neighbors = defaultdict(list)
         
         lim_pID_a = [list_occ_pIDs_inc[i][0]>=MIN_OCC_MOST_ABUND_PID for i in range(len(list_occ_pIDs_inc))].count(True)
         print 'lim_pID_a:'+str(lim_pID_a)
         print 'nb occ pID_a at pos lim_pID_a-1 in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a-1][0])
         print 'nb occ pID_a at pos lim_pID_a in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a][0])
 
-        for pID_a in list_occ_pIDs_dec[:lim_pID_a]:
+        for ii_a, pID_a in enumerate(list_occ_pIDs_dec[:lim_pID_a]):
+            # this condition should always evaluate to true
             if dict_neighbor_state_pIDs[pID_a[1]] == False:
-                for ii,pID_r in enumerate(list_occ_pIDs_inc[:list_occ_pIDs_inc.index(pID_a)]):
-                     if((dict_neighbor_state_pIDs[pID_r[1]] == False) and (pID_r[0] < pID_a[0])):
-                        pIDs_align_score = align.localms(pID_a[1], pID_r[1], 1, 0, -0.6, -0.3)
-                        if (len(pIDs_align_score) != 0): # if pID_a[1] and pID_r[1] can be aligned
-                            if (pIDs_align_score[0][2] >= 8.4):
-                                print 'pID_a: '+str(pID_a)+', pID_r: '+str(pID_r)
-                                print pIDs_align_score[0][0], pIDs_align_score[0][1]
-                                print dict_neighbor_state_pIDs[pID_a[1]], dict_neighbor_state_pIDs[pID_r[1]]
-                                print "possible neighbors"
-                    
-                                if (pID_a[0] >= MIN_OCC_MOST_ABUND_PID): # if pID_a occurs enough times to have neighbors
-                                    if (pID_r[0] != 2): # pID_r occurs once or more than twice: only one sequence comparison to do
-                                        seq_a = dict_cons_seq[pID_a[1]][0][2] # [nb_fwd,nb_rev,seq]
-                                        if(pID_r[0] == 1): # pID_r occurs once: its sequence is in dict_all_reads
-                                            # seq_r = dict_all_reads[pID_r[0]][0][2]
-                                            seq_r = dict_all_reads[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
-                                        else: # pID_r occurs at least 3 times: its consensus sequence is in dict_cons_seq
-                                            seq_r = dict_cons_seq[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
-                                        score = align.localms(seq_r, seq_a, 1, 0, -1, -1)[0]
-                                        print 'Alignment score: '+ str(score[2])
-                                        print score[0]
-                                        print score[1]
-                                        if(score[2] >= len(seq_a) - DIST_MAX):
-                                            dict_neighbor_of[pID_r[1]] = pID_a[1]
-                                            dict_neighbor_state_pIDs[pID_r[1]] = True
-                                            print "NEIGHBORS !"
+                continue
+            # loop over rare pid
+            for ii,pID_r in enumerate(list_occ_pIDs_inc[:-(ii_a+1)]):
+                # check whether this PID is already a neighbor of some other
+                 if((dict_neighbor_state_pIDs[pID_r[1]] == False) and (pID_r[0] < pID_a[0])):
+                    pIDs_align_score = align.localms(pID_a[1], pID_r[1], 1, 0, -0.6, -0.3)
+                    if (len(pIDs_align_score) != 0): # if pID_a[1] and pID_r[1] can be aligned
+                        if (pIDs_align_score[0][2] >= min_pid_alignment_score):
+                            print 'pID_a: '+str(pID_a)+', pID_r: '+str(pID_r)
+                            print pIDs_align_score[0][0], pIDs_align_score[0][1]
+                            print dict_neighbor_state_pIDs[pID_a[1]], dict_neighbor_state_pIDs[pID_r[1]]
+                            print "possible neighbors"
 
-                                    else: # pID_r occurs twice: comparison of sequence of pID_a with its 2 sequences in dict_all_reads
-                                        seq_a = dict_cons_seq[pID_a[1]][0][2] # [nb_fwd,nb_rev,seq]
-                                        seq_r_0 = dict_all_reads[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
-                                        seq_r_1 = dict_all_reads[pID_r[1]][1][2] # [nb_fwd,nb_rev,seq]
-                                        score_0 = align.localms(seq_r_0, seq_a, 1, 0, -1, -1)[0]
-                                        score_1 = align.localms(seq_r_1, seq_a, 1, 0, -1, -1)[0]
-                                        print 'Alignment score_0: '+ str(score_0[2])
-                                        print score_0[0]
-                                        print score_0[1]
-                                        print 'Alignment score_1: '+ str(score_1[2])
-                                        print score_1[0]
-                                        print score_1[1]
-                                        if((score_0[2] >= len(seq_a) - DIST_MAX) or (score_1[2] >= len(seq_a) - DIST_MAX)):
-                                            dict_neighbor_of[pID_r[1]] = pID_a[1]
-                                            dict_neighbor_state_pIDs[pID_r[1]] = True
-                                            print "NEIGHBORS !"
-                                else:
-                                    print 'PB: pID_a does not have the good number of occurrences !!!'
+                            if pID_r[0]>2: 
+                                neighbor_candidates = dict_cons_seq[pID_r[1]]
+                            else:
+                                neighbor_candidates = dict_all_reads[pID_r[1]]
 
+                                                                   
+                            if (pID_r[0] != 2): # pID_r occurs once or more than twice: only one sequence comparison to do
+                                seq_a = dict_cons_seq[pID_a[1]][0][2] 
+                                if(pID_r[0] == 1): # pID_r occurs once: its sequence is in dict_all_reads
+                                    # seq_r = dict_all_reads[pID_r[0]][0][2]
+                                    seq_r = dict_all_reads[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
+                                else: # pID_r occurs at least 3 times: its consensus sequence is in dict_cons_seq
+                                    seq_r = dict_cons_seq[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
+
+                            for nf, nr, seq_r in neighbor_candidates:
+                                if lt.check_neighbor_plausibility(seq_a, seq_r, DIST_MAX):
+                                    dict_neighbors[pID_a[1]].append(pID_r[1])
+                                    dict_neighbor_of[pID_r[1]] = pID_a[1]
+                                    dict_neighbor_state_pIDs[pID_r[1]] = True
+                                    print "NEIGHBORS !"
+                                    break
                 
-        dict_neighbors = defaultdict(list)
-        for pID in dict_neighbor_of.keys():
-            dict_neighbors[dict_neighbor_of[pID]].append(pID)
         
         print 'neighbors:'
         nb_neighbors_stated = 0
@@ -244,8 +184,6 @@ if (len(sys.argv) == 3):
                     # write the reads corresponding to pID
                     for cur_read in dict_all_reads[pID]: # cur_read is a list [nb_occ_fwd,nb_occ_rev,seq]
                         pid_orig = pID
-                        #read_id = cur_read[0]
-                        #read_dir = cur_read[1]
                         mut_flag = ''
                         new_read_id = str(pID+'_'+str(cur_read[0])+'_'+str(cur_read[1])+'_'+pid_orig+mut_flag)
                         neighbors_filtered_reads_file.write('>'+new_read_id+'\n') # write the new id of the read
@@ -260,8 +198,6 @@ if (len(sys.argv) == 3):
                             # write the neighbors pID_n
                             for read_n in dict_all_reads[pID_n]: # read_n is a list [nb_occ_fwd,nb_occ_rev,seq]
                                 pid_orig = pID_n
-                                #read_id = read_n[0]
-                                #read_dir = read_n[1]
                                 mut_flag = '_m'
                                 new_read_id = str(pID+'_'+str(read_n[0])+'_'+str(read_n[1])+'_'+pid_orig+mut_flag)
                                 neighbors_filtered_reads_file.write('>'+new_read_id+'\n') # write the new id of the read
@@ -272,7 +208,6 @@ if (len(sys.argv) == 3):
 
         print 'nb reads written: '+str(count_reads_written)
         print 'nb neighbored reads written: '+str(count_neighbors_reads_written)
-        
         print 'nb neighbored pIDs: '+str(nb_neighbors_stated)
 
         
