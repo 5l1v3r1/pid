@@ -22,9 +22,12 @@ auto_file_name = str(sys.argv[0])
 ######
 
 
-if(len(sys.argv)==2):
+if(len(sys.argv)>1):
     # parse the input consensus sequences file name
-    relative_path_to_cons_seq_file=str(sys.argv[1])
+    rundir=str(sys.argv[1]).rstrip('/')+'/'
+    if len(sys.argv)>2:
+        analysis_type = '_'+sys.argv[2]
+
     path_to_templates = "../templates/"
     cons_seq_file_basename = lt.get_last_part_of_path(relative_path_to_cons_seq_file)
     
