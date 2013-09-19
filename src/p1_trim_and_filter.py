@@ -194,7 +194,9 @@ def logfile_output(res, barcode):
     barcode
     '''
     lt.check_and_create_directory(res.runid)
-    with  open(res.runid+'/bc_'+barcode+'_summary.txt', 'w') as log_file:
+    barcode_dir  = res.runid+'/bc_'+barcode+'_analysis'
+    lt.check_and_create_directory(barcode_dir)
+    with  open(barcode_dir+'/filter_summary.txt', 'w') as log_file:
         log_file.write('Barcode: ' + str(barcode) + '\n')
         log_file.write('Total number of reads (all barcodes): ' + str(res.count) + '\n')
         log_file.write('Number of pIDs: ' + str(len(res.good_reads[bc])) + '\n')
@@ -215,7 +217,9 @@ def export_good_reads_to_fasta_file_for_consensus_compress(res, barcode, mosp):
     # make directory for this run
     ####
     lt.check_and_create_directory(res.runid)
-    with open(res.runid+'/bc_'+barcode+'_min_'+str(mosp)+'.fasta', 'w') as out_file:
+    barcode_dir  = res.runid+'/bc_'+barcode+'_analysis'
+    lt.check_and_create_directory(barcode_dir)
+    with open(barcode_dir+'/filtered_reads.fasta', 'w') as out_file:
         for pID in sorted(res.good_reads[barcode].keys()):
             count_seq = res.good_reads[barcode][pID]
             if len(count_seq) >= mosp: # write the reads corresponding to pID if this one appears at least mosp times

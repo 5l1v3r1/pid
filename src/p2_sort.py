@@ -39,51 +39,45 @@ batchsize = 10
 ######
 # MAIN
 ######
-if (len(sys.argv) > 1):
-    relative_path_to_filtered_reads_file = str(sys.argv[1])
-    if len(sys.argv)>2:
-        analysis_type = '_'+sys.argv[2]
-    else:
-        analysis_type = ''
-    filtered_reads_file = lt.get_last_part_of_path(relative_path_to_filtered_reads_file)
-    path_base = lt.get_base_of_path(relative_path_to_filtered_reads_file)
-    barcode = filtered_reads_file.split('_')[1]
+if (len(sys.argv) ==3):
+    rundir = str(sys.argv[1]).rstrip('/')+'/'
+    readtype = sys.argv[2]
 
-    #create the directory for the given barcode
-    analysis_dir = path_base+'/bc_'+barcode+'_analysis'+analysis_type
-    lt.check_and_create_directory(analysis_dir)
+    bc_dir_list = glob.glob(rundir+'bc_*_analysis')
+    for bc_dir in bc_dir_list:
+        reads_file = bc_dir.rstrip('/')+'/'+readtype+'_reads.fasta'
 
-    # create directory for batch 0
-    batch=0
-    temp_pid_files_dir =analysis_dir+'/temp_'+"{0:04d}".format(batch)
-    lt.check_and_create_directory(temp_pid_files_dir)
-    dict_pIDs = defaultdict(list)
+        # create directory for batch 0
+        batch=0
+        temp_pid_files_dir =analysis_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
+        lt.check_and_create_directory(temp_pid_files_dir)
+        dict_pIDs = defaultdict(list)
     
     #import the file containing, for the given barcode, the sequences for each pID
     #generate the pID specific temp files for alignments
-    with open(relative_path_to_filtered_reads_file, 'r') as input_file:
-        count=0
-        for record in SeqIO.parse(input_file, 'fasta'):
-            pID = str(record.id.split('_')[0])
-            dict_pIDs[pID].append((record.id,record.seq))
-
-        all_pIDs = sorted(dict_pIDs.keys())
-        for pii, pID in enumerate(all_pIDs):
-            # write the temp files for each pID in the corresponding barcode directory
-            with open(temp_pid_files_dir+'/'+ pID+'.fasta', 'w') as output_pID_file:
-                for read in dict_pIDs[pID]:
-                    output_pID_file.write(str('>'+read[0]+'\n'))
-                    output_pID_file.write(str(read[1]+'\n'))
-                    count+=1
-                    if(count%500==0):
+        with open(reads_file, 'r') as input_file:
+            count=0
+            for record in SeqIO.parse(input_file, 'fasta'):
+                pID = str(record.id.split('_')[0])
+                dict_pIDs[pID].append((record.id,record.seq))
+                
+                all_pIDs = sorted(dict_pIDs.keys())
+                for pii, pID in enumerate(all_pIDs):
+                    # write the temp files for each pID in the corresponding barcode directory
+                    with open(temp_pid_files_dir+'/'+ pID+'.fasta', 'w') as output_pID_file:
+                        for read in dict_pIDs[pID]:
+                            output_pID_file.write(str('>'+read[0]+'\n'))
+                            output_pID_file.write(str(read[1]+'\n'))
+                            count+=1
+                            if(count%500==0):
                         print 'count = ' + str(count)
-            if ((batch+1)*batchsize<pii):
-                batch+=1
-                temp_pid_files_dir =analysis_dir+'/temp_'+"{0:04d}".format(batch)
-                lt.check_and_create_directory(temp_pid_files_dir)
-
-        print 'total : ' + str(count)
+                        if ((batch+1)*batchsize<pii):
+                            batch+=1
+                            temp_pid_files_dir =analysis_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
+                            lt.check_and_create_directory(temp_pid_files_dir)
+                            
+                            print 'total : ' + str(count)
         #else:
         #    print 'no file created'
 else: 
-    print auto_file_name+': usage: '+auto_file_name+' <filtered reads file (in ../data/)>'
+    print auto_file_name+': usage: '+auto_file_name+' <run directory> <readtype>'

@@ -55,17 +55,14 @@ def make_consensus(file_name):
 
 
 if __name__=='__main__':
-    if(len(sys.argv)>1):
+    if(len(sys.argv)==3):
         # parse the input consensus sequences file name
         analysis_dir=str(sys.argv[1]).rstrip('/')+'/'
-        if len(sys.argv)>2:
-            analysis_type = '_'+sys.argv[2]
-        else:
-            analysis_type = ''
+        readtype = '_'+sys.argv[2]
         
-        temp_directories = glob.glob(analysis_dir+'temp_*')
-        consensus_fname = analysis_dir+'consensus_sequences'+analysis_type+'.fasta'
-        aligned_reads_fname = analysis_dir+'aligned_reads'+analysis_type+'.fasta'
+        temp_directories = glob.glob(analysis_dir+'temp_'+readtype+'*')
+        consensus_fname = analysis_dir+'consensus_sequences'+readtype+'.fasta'
+        aligned_reads_fname = analysis_dir+'aligned_reads'+readtype+'.fasta'
 
         with open(consensus_fname, 'w') as consensus_file, \
                 open(aligned_reads_fname, 'w') as aligned_reads_file:

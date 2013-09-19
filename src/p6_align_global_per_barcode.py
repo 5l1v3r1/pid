@@ -28,27 +28,18 @@ if(len(sys.argv)>1):
     if len(sys.argv)>2:
         analysis_type = '_'+sys.argv[2]
 
-    path_to_templates = "../templates/"
-    cons_seq_file_basename = lt.get_last_part_of_path(relative_path_to_cons_seq_file)
-    
-    [prefix_date_and_id,file_type,barcode] = [lt.trim_extension(cons_seq_file_basename).split('_')[i] for i in [0,1,2]]
+    barcode_directories = glob.glob(rundir+'bc_*_analysis*')
+    for dname in barcode_directories:
+        consensus_file_list = glob.glob(dname+'/consensus*fasta')
+        time_start = time.time()
+        for fname in consensus_file_list:
+            aligned_fname = lt.trim_extension(fname)+'_aligned.fasta'
 
-    # create (if necessary) the consensus directory
-    outpath = path_to_templates+'dir-'+prefix_date_and_id+'_align-global'
-    lt.check_and_create_directory(outpath)
-    
-    # align
-    aligned_cons_seq_file_name = outpath+'/'+prefix_date_and_id+'_align-global_'+barcode+'.fasta'
-    print 'Global consensus sequences alignment for barcode: ' + barcode + ' (from file: ' + relative_path_to_cons_seq_file + ' )'
+            cline = MuscleCommandline(input = fname, out = aligned_fname)
+            cline()
 
-    cline = MuscleCommandline(input = relative_path_to_cons_seq_file, out = aligned_cons_seq_file_name)
-    
-    time_start = time.time()
-    #
-    cline()
-    #
-    time_end = time.time()
-    print 'alignment computation time: ' + str(time_end - time_start)
+        time_end = time.time()
+        print 'alignment computation time: ' + str(time_end - time_start)
 
 else:
-    print auto_file_name + ': usage: '+ auto_file_name + ' <consensus sequences file (in ../templates/dir-<date_and_id>_consensus)>'
+    print auto_file_name + ': usage: '+ auto_file_name + ' <directory containing the directories for each barcode containing the consensus sequence files'
