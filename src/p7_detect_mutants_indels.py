@@ -69,9 +69,9 @@ if (len(sys.argv) == 3):
     for pID,reads in dict_all_reads.iteritems():
         pID_abundance[pID] = sum([x[0]+x[1] for x in reads])
 
-    print '#pIDs occurring only once: ' + str([x==1 for x in pID_abundance.values()])
-    print '#pIDs occurring only twice: ' + str([x==2 for x in pID_abundance.values()])
-    print '#pIDs occurring at least 3 times: ' + str([x>2 for x in pID_abundance.values()])
+    print '#pIDs occurring only once: ' + str(sum([x==1 for x in pID_abundance.values()]))
+    print '#pIDs occurring only twice: ' + str(sum([x==2 for x in pID_abundance.values()]))
+    print '#pIDs occurring at least 3 times: ' + str(sum([x>2 for x in pID_abundance.values()]))
     ####
 
 
@@ -200,4 +200,4 @@ if (len(sys.argv) == 3):
 
 
 else:
-    print auto_file_name + ': usage: '+ auto_file_name + ' <directory with reads from a barcode>'
+    print auto_file_name + ': usage: '+ auto_file_name + ' <directory with reads from a barcode> <type of read>'

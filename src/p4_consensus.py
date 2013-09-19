@@ -57,30 +57,34 @@ def make_consensus(file_name):
 if __name__=='__main__':
     if(len(sys.argv)==3):
         # parse the input consensus sequences file name
-        analysis_dir=str(sys.argv[1]).rstrip('/')+'/'
-        readtype = '_'+sys.argv[2]
+        run_dir=str(sys.argv[1]).rstrip('/')+'/'
+        readtype = sys.argv[2]
         
-        temp_directories = glob.glob(analysis_dir+'temp_'+readtype+'*')
-        consensus_fname = analysis_dir+'consensus_sequences'+readtype+'.fasta'
-        aligned_reads_fname = analysis_dir+'aligned_reads'+readtype+'.fasta'
+        barcode_dir_list = glob.glob(run_dir+'bc_*_analysis')
 
-        with open(consensus_fname, 'w') as consensus_file, \
-                open(aligned_reads_fname, 'w') as aligned_reads_file:
-            print temp_directories
-            for temp_dir in temp_directories:
-                pID_files = glob.glob(temp_dir+'/*aligned.fasta')
-                print pID_files
-                for pID_file in pID_files:
-                    pID = lt.get_last_part_of_path(pID_file).split('_')[0]
-                    with open(pID_file, 'r') as infile:
-                        tmp_aln = AlignIO.read(infile, 'fasta')
-                    AlignIO.write(tmp_aln, aligned_reads_file, 'fasta')
-                    consensus_seq = make_consensus(pID_file)
-                    if consensus_seq[1]+consensus_seq[2]>2:
-                        consensus_file.write('>'+lt.read_label(pID, consensus_seq[1], consensus_seq[2])+'\n')
-                        consensus_file.write(consensus_seq[0]+'\n')
+        for analysis_dir in barcode_dir_list:
+            print "analyzing directory:", analysis_dir
+            temp_directories = glob.glob(analysis_dir+'/temp_'+readtype+'*')
+            consensus_fname = analysis_dir+'/consensus_sequences_'+readtype+'.fasta'
+            aligned_reads_fname = analysis_dir+'/aligned_reads_'+readtype+'.fasta'
 
-                shutil.rmtree(temp_dir)
+            with open(consensus_fname, 'w') as consensus_file, \
+                    open(aligned_reads_fname, 'w') as aligned_reads_file:
+                print temp_directories
+                for temp_dir in temp_directories:
+                    pID_files = glob.glob(temp_dir+'/*aligned.fasta')
+                    print pID_files
+                    for pID_file in pID_files:
+                        pID = lt.get_last_part_of_path(pID_file).split('_')[0]
+                        with open(pID_file, 'r') as infile:
+                            tmp_aln = AlignIO.read(infile, 'fasta')
+                        AlignIO.write(tmp_aln, aligned_reads_file, 'fasta')
+                        consensus_seq = make_consensus(pID_file)
+                        if consensus_seq[1]+consensus_seq[2]>2:
+                            consensus_file.write('>'+lt.read_label(pID, consensus_seq[1], consensus_seq[2])+'\n')
+                            consensus_file.write(consensus_seq[0]+'\n')
+
+                    shutil.rmtree(temp_dir)
     else:
-        print auto_file_name+': usage: '+auto_file_name+' <aligned reads files directory (in ../templates/)>'
+        print auto_file_name+': usage: '+auto_file_name+' <run directory> <read type to work on>'
 

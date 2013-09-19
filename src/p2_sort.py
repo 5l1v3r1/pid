@@ -10,7 +10,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import glob
 import sys
 import datetime
 import time
@@ -49,7 +49,7 @@ if (len(sys.argv) ==3):
 
         # create directory for batch 0
         batch=0
-        temp_pid_files_dir =analysis_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
+        temp_pid_files_dir =bc_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
         lt.check_and_create_directory(temp_pid_files_dir)
         dict_pIDs = defaultdict(list)
     
@@ -70,10 +70,10 @@ if (len(sys.argv) ==3):
                             output_pID_file.write(str(read[1]+'\n'))
                             count+=1
                             if(count%500==0):
-                        print 'count = ' + str(count)
+                                print 'count = ' + str(count)
                         if ((batch+1)*batchsize<pii):
                             batch+=1
-                            temp_pid_files_dir =analysis_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
+                            temp_pid_files_dir =bc_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
                             lt.check_and_create_directory(temp_pid_files_dir)
                             
                             print 'total : ' + str(count)

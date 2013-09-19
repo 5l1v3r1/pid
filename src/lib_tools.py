@@ -1,4 +1,5 @@
 from Bio.pairwise2 import align
+from Bio import SeqIO
 from collections import defaultdict
 import os
 
@@ -64,7 +65,7 @@ def parse_readfile(fname):
     with open(fname, 'r') as reads_file:
         # for all the valid reads (without Ns), add the read to dict_all_reads
         for record in SeqIO.parse(reads_file, 'fasta'):
-            pID,nb_reads_fwd,nb_reads_rev = record.id.split('_')[0:2]
+            pID,nb_reads_fwd,nb_reads_rev = record.id.split('_')[0:3]
             nb_reads_fwd = int(nb_reads_fwd)
             nb_reads_rev = int(nb_reads_rev)
             seq = str(record.seq)
