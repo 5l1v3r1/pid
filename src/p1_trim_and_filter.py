@@ -34,12 +34,12 @@ class struct_var_set:
         #if(CONFIG_FILE_NAME in sys.argv):
         try:
             execfile(CONFIG_FILE_NAME)
-            if ('prefix_date_and_id' in cfg.keys() and 'p5_virus_match' in cfg.keys() 
+            if ('runid' in cfg.keys() and 'p5_virus_match' in cfg.keys() 
                 and 'p3_virus_match' in cfg.keys() and 'input_data_file' in cfg.keys() 
                 and 'barcodes' in cfg.keys() and 'reverse' in cfg.keys()):
 
                 # MANDATORY variables in the configuration file:
-                self.prefix_date_and_id = cfg['prefix_date_and_id']
+                self.runid = cfg['runid']
                 self.p5_virus_match = cfg['p5_virus_match']
                 self.p3_virus_match = cfg['p3_virus_match']
                 self.match_seqs = [self.p5_virus_match, self.p3_virus_match]
@@ -82,7 +82,7 @@ class struct_var_set:
                 #self.templates={}
             else:
                 print 'Problem: at least one of the following (mandatory) parameters is missing in ' + CONFIG_FILE_NAME + ':'
-                print 'prefix_date_and_id, p5_virus_match, p3_virus_match, p3_adaptor, barcodes, input_data_file, reverse.' 
+                print 'runid, p5_virus_match, p3_virus_match, p3_adaptor, barcodes, input_data_file, reverse.' 
         #else:
         except:
             print 'The configuration file ' + CONFIG_FILE_NAME + ' is missing or mistaken !'
@@ -139,7 +139,7 @@ def retrieve_pID_barcode_and_sequence(res, fwd, scores, seq, seq_id):
 #####
 def filter_reads(res):
     time_start = time.time()
-    with open(str('../data/'+res.input_data_file), 'r') as seq_file:
+    with open(str(res.input_data_file), 'r') as seq_file:
         file_format = res.input_data_file.split('.')[-1]
         for record in SeqIO.parse(seq_file, file_format):
             tmp_seq = str(record.seq)
@@ -193,7 +193,10 @@ def logfile_output(res, barcode):
     res is the structure containing the filtering operation results
     barcode
     '''
-    with open('../data/' + res.prefix_date_and_id + '_' + str(barcode) + '_SW_match_summary.txt', 'w') as log_file:
+    lt.check_and_create_directory(res.runid)
+    barcode_dir  = res.runid+'/bc_'+barcode+'_analysis'
+    lt.check_and_create_directory(barcode_dir)
+    with  open(barcode_dir+'/filter_summary.txt', 'w') as log_file:
         log_file.write('Barcode: ' + str(barcode) + '\n')
         log_file.write('Total number of reads (all barcodes): ' + str(res.count) + '\n')
         log_file.write('Number of pIDs: ' + str(len(res.good_reads[bc])) + '\n')
@@ -210,7 +213,13 @@ def export_good_reads_to_fasta_file_for_consensus_compress(res, barcode, mosp):
     barcode
     mosp min_occ_same_pid
     '''
-    with open('../data/' + res.prefix_date_and_id + '_' + barcode + '_filtered-reads-SW-mosp-' + str(mosp) + '.fasta', 'w') as out_file:
+    ####
+    # make directory for this run
+    ####
+    lt.check_and_create_directory(res.runid)
+    barcode_dir  = res.runid+'/bc_'+barcode+'_analysis'
+    lt.check_and_create_directory(barcode_dir)
+    with open(barcode_dir+'/filtered_reads.fasta', 'w') as out_file:
         for pID in sorted(res.good_reads[barcode].keys()):
             count_seq = res.good_reads[barcode][pID]
             if len(count_seq) >= mosp: # write the reads corresponding to pID if this one appears at least mosp times
@@ -221,7 +230,7 @@ def export_good_reads_to_fasta_file_for_consensus_compress(res, barcode, mosp):
                 for read_to_write in dict_seq.keys():
                     nb_fwd = dict_seq[read_to_write]['fwd']
                     nb_rev = dict_seq[read_to_write]['rev']
-                    out_file.write('>' + pID + '_' + str(nb_fwd) + '_' + str(nb_rev) + '\n')
+                    out_file.write('>' + lt.read_label(pID, nb_fwd, nb_rev) + '\n')
                     out_file.write(read_to_write+'\n')
                 
 
@@ -243,7 +252,7 @@ def plot_read_length_distribution(res):
         plt.ylabel('number of reads')
         plt.legend(loc = 2)
         plt.xlim([0,500])
-        plt.savefig('../figures/' + res.prefix_date_and_id + '_SW_matching_read_length.pdf')
+        plt.savefig(res.runid + '/read_length.pdf')
 
 #####
 def plot_number_of_reads_per_pID(res):
@@ -259,7 +268,8 @@ def plot_number_of_reads_per_pID(res):
         ax.set_xscale('log')
         plt.ylim([0.8,1.2e4])
         plt.legend(loc=1)
-        plt.savefig('../figures/' + res.prefix_date_and_id + '_SW_PID_copy_number.pdf')
+        plt.savefig(res.runid + '/copy_number.pdf')
+
 
         
 
@@ -277,6 +287,7 @@ if __name__=='__main__':
     except:
         print 'Problem for initialisation: there is something wrong with the configuration file ' + CONFIG_FILE_NAME + '!\n'
 
+        
     ####
     # Filter the data file
     ####

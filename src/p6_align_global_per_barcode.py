@@ -9,7 +9,7 @@
 import numpy as np
 from Bio import SeqIO
 from Bio.Align.Applications import MuscleCommandline
-import os
+import glob
 import sys
 import time
 import lib_tools as lt
@@ -17,32 +17,30 @@ import lib_tools as lt
 
 auto_file_name = str(sys.argv[0])
 
+######
+# DEF FUNCTIONS
+######
 
-if __name__=='__main__':
-    if(len(sys.argv)==2):
-        # parse the input consensus sequences file name
-        relative_path_to_cons_seq_file=str(sys.argv[1])
-        path_to_templates = "../templates/"
-        cons_seq_file_basename = relative_path_to_cons_seq_file.split('/')[3]
-    
-        [prefix_date_and_id,file_type,barcode] = [cons_seq_file_basename.split('_')[i] for i in [0,1,2]]
-        barcode = barcode.split('.')[0] # remove file extension ".fasta"
 
-        # create (if necessary) the consensus directory
-        lt.check_and_create_directory(str(path_to_templates+'dir-'+prefix_date_and_id+'_align-global'))
-    
-        # align
-        aligned_cons_seq_file_name = str(path_to_templates+'dir-'+prefix_date_and_id+'_align-global/'+prefix_date_and_id+'_align-global_'+barcode+'.fasta') 
-        print 'Global consensus sequences alignment for barcode: ' + barcode + ' (from file: ' + relative_path_to_cons_seq_file + ' )'
-        
-        cline = MuscleCommandline(input = relative_path_to_cons_seq_file, out = aligned_cons_seq_file_name)
-        
+if(len(sys.argv)==3):
+    # parse the input consensus sequences file name
+    rundir=str(sys.argv[1]).rstrip('/')+'/'
+    read_type = '_'+sys.argv[2]
+
+    barcode_directories = glob.glob(rundir+'bc_*_analysis*')
+    for dname in barcode_directories:
+        consensus_file_list = glob.glob(dname+'/consensus*'+read_type+'.fasta')
         time_start = time.time()
-        #
-        cline()
-        #
+        for fname in consensus_file_list:
+            aligned_fname = lt.trim_extension(fname)+'_aligned.fasta'
+
+            try:
+                cline = MuscleCommandline(input = fname, out = aligned_fname)
+                cline()
+            except:
+                print "Trouble aligning", fname
         time_end = time.time()
         print 'alignment computation time: ' + str(time_end - time_start)
 
-    else:
-        print auto_file_name + ': usage: '+ auto_file_name + ' <consensus sequences file (in ../templates/dir-<date_and_id>_consensus)>'
+else:
+    print auto_file_name + ': usage: '+ auto_file_name + ' <run director> <read type>'

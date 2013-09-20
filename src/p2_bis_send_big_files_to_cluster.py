@@ -31,13 +31,10 @@ if (len(sys.argv)==3):
     #parse the input directory name
     ####
     path_to_templates = '../templates/'
-    #temp_dir_basename = dir_to_check[len(path_to_templates):]
-    temp_dir_basename = dir_to_check.split('/')[2]
-    [prefix_date_and_id, bc]= [temp_dir_basename.split('_')[i] for i in [0,2]]
-    prefix_date_and_id = prefix_date_and_id[len('dir-'):] # "dir-" to remove
-    #if bc[-1]=='/':
-    #    bc= bc[:-1] # "/" to remove
+    temp_dir_basename = lt.get_last_part_of_path(dir_to_check)
+    prefix_date_and_id, bc = lt.parse_dir_name(temp_dir_basename)[:2]
     print prefix_date_and_id, bc
+
     ####
     # create the specific cluster directory
     ####
