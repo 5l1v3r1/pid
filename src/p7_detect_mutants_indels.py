@@ -14,7 +14,6 @@ import numpy as np
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
-from Bio.pairwise2 import align
 from collections import Counter
 from collections import defaultdict
 from itertools import imap
