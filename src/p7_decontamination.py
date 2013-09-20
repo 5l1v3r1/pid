@@ -54,66 +54,70 @@ if (len(sys.argv)==5):
     for pID in dict_all_reads:
         if pID in dict_cons_seq:
             score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], dict_cons_seq[pID][2])[2]
-            print '----'+str(RUN)+': '+barcode+' - '+pID+': '+pID+', align score: '+str(score_align)
+            print '----'+str(true_seq_id)+': '+pID+', align score: '+str(score_align)
             dict_score_alignments[pID].append(score_align)
         else:
             for nf, nb, seq in dict_all_reads[pID]:
                 score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], dict_cons_seq[pID][2])[2]
-                print '----'+str(RUN)+': '+barcode+' - '+pID+': '+pID+', align score: '+str(score_align)
+                print '----'+str(true_seq_id)+': '+pID+', align score: '+str(score_align)
                 dict_score_alignments[pID].append(score_align)
 
 
     #4.print some statistics
-    #for bc in barcodes[prefix_date_and_id[RUN-1]]:
     print '** LIM SCORE ALIGN-'+true_seq_id
-    print '---- min = '+str(min([dict_score_alignments[i] for i in dict_score_alignments.keys()]))
-    print '---- max = '+str(max([dict_score_alignments[i] for i in dict_score_alignments.keys()]))
-    average_scores=np.mean([dict_score_alignments[i] for i in dict_score_alignments.keys()])
+    #print '---- min = '+str(min([dict_score_alignments[i] for i in dict_score_alignments.keys()]))
+    print '---- min = '+str(min(np.hstack(dict_score_alignments.values())))
+    #print '---- max = '+str(max([dict_score_alignments[i] for i in dict_score_alignments.keys()]))
+    print '---- min = '+str(max(np.hstack(dict_score_alignments.values())))
+    #average_scores=np.mean([dict_score_alignments[i] for i in dict_score_alignments.keys()])
+    average_scores=np.mean(np.hstack(dict_score_alignments.values()))
     print '---- average score = '+str(average_scores)
     print '---- #pids (total) = '+str(len(dict_all_reads.keys()))
 
 
     #5.count good and bad alignments
-    # for bc in barcodes[prefix_date_and_id[RUN-1]]:
+    
 
-    count_bad_scores = sum([x<len(ref_seq[true_seq_id])-DIST_MAX for x in reads for n dict_score_alignments])
+    count_bad_scores = sum([x<len(ref_seq[true_seq_id])-DIST_MAX for x in reads for reads in dict_score_alignments])
     nb_bad_scores_reads = sum([x<len(ref_seq[true_seq_id])-DIST_MAX for x in reads for reads in dict_score_alignments])
     count_good_scores = sum([x>=len(ref_seq[true_seq_id])-DIST_MAX for x in reads for reads in dict_score_alignments])
     nb_good_scores_reads = sum([x<len(ref_seq[true_seq_id])-DIST_MAX for x in reads for reads in dict_score_alignments])
 
-    count_bad_scores_once_twice = 0
-    nb_bad_scores_reads_once_twice = 0
-    count_good_scores_once_twice = 0
-    nb_good_scores_reads_once_twice = 0
+    # count_bad_scores_once_twice = 0
+    # nb_bad_scores_reads_once_twice = 0
+    # count_good_scores_once_twice = 0
+    # nb_good_scores_reads_once_twice = 0
 
-    for pID in dict_score_alignments.keys():
-        if (dict_score_alignments[pID] <  dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
-            count_bad_scores += 1
-            nb_bad_scores_reads += dict_pIDs_occ[pID]
-        else:
-            count_good_scores += 1
-            nb_good_scores_reads += dict_pIDs_occ[pID]
+    # for pID in dict_score_alignments.keys():
+    #     if (dict_score_alignments[pID] <  dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
+    #         count_bad_scores += 1
+    #         nb_bad_scores_reads += dict_pIDs_occ[pID]
+    #     else:
+    #         count_good_scores += 1
+    #         nb_good_scores_reads += dict_pIDs_occ[pID]
 
-    for pID in dict_score_alignments_once_twice.keys():
-        if (max(dict_score_alignments_once_twice[pID]) <  dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
-            count_bad_scores_once_twice += 1
-            nb_bad_scores_reads_once_twice += dict_pIDs_occ_once_twice[pID]
-        else:
-            count_good_scores_once_twice += 1
-            nb_good_scores_reads_once_twice += dict_pIDs_occ_once_twice[pID]
+    # for pID in dict_score_alignments_once_twice.keys():
+    #     if (max(dict_score_alignments_once_twice[pID]) <  dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
+    #         count_bad_scores_once_twice += 1
+    #         nb_bad_scores_reads_once_twice += dict_pIDs_occ_once_twice[pID]
+    #     else:
+    #         count_good_scores_once_twice += 1
+    #         nb_good_scores_reads_once_twice += dict_pIDs_occ_once_twice[pID
+                                                                        ]
 
-    print 'PIDS OCC >= 3:'
-    print '--RUN '+str(RUN)+': '+barcode+': #bad align scores: '+str(count_bad_scores)
-    print '--RUN '+str(RUN)+': '+barcode+': #bad align scores (reads): '+str(nb_bad_scores_reads)
-    print '--RUN '+str(RUN)+': '+barcode+': #good align scores: '+str(count_good_scores)
-    print '--RUN '+str(RUN)+': '+barcode+': #good align scores (reads): '+str(nb_good_scores_reads)
-
-    print '1 <= PIDS OCC <= 2:'
-    print '--RUN '+str(RUN)+': '+barcode+': #bad align scores: '+str(count_bad_scores_once_twice)
-    print '--RUN '+str(RUN)+': '+barcode+': #bad align scores (reads): '+str(nb_bad_scores_reads_once_twice)
-    print '--RUN '+str(RUN)+': '+barcode+': #good align scores: '+str(count_good_scores_once_twice)
-    print '--RUN '+str(RUN)+': '+barcode+': #good align scores (reads): '+str(nb_good_scores_reads_once_twice)
+    #print 'PIDS OCC >= 3:'
     print '****'
+    print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores: '+str(count_bad_scores)
+    print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores (reads): '+str(nb_bad_scores_reads)
+    print '--RUN-barcode: '+str(true_seq_id)+': #good align scores: '+str(count_good_scores)
+    print '--RUN-barcode: '+str(true_seq_id)+': #good align scores (reads): '+str(nb_good_scores_reads)
+
+    # print '1 <= PIDS OCC <= 2:'
+    # print '--RUN '+str(RUN)+': '+barcode+': #bad align scores: '+str(count_bad_scores_once_twice)
+    # print '--RUN '+str(RUN)+': '+barcode+': #bad align scores (reads): '+str(nb_bad_scores_reads_once_twice)
+    # print '--RUN '+str(RUN)+': '+barcode+': #good align scores: '+str(count_good_scores_once_twice)
+    # print '--RUN '+str(RUN)+': '+barcode+': #good align scores (reads): '+str(nb_good_scores_reads_once_twice)
+    
 
 
     # 6.check contamination
@@ -123,78 +127,81 @@ if (len(sys.argv)==5):
     dict_reclassif={}
     dict_count_reclassif_pIDs=defaultdict(int)
     dict_count_reclassif_reads=defaultdict(int)
-    #for bc in barcodes[prefix_date_and_id[RUN-1]]:
-    print 'RUN '+str(RUN)+' - barcode '+barcode+':'
-    #dict_possible_good_align={}
-    #dict_reclassif={}
-    #dict_count_reclassif_pIDs=defaultdict(int)
-    #dict_count_reclassif_reads=defaultdict(int)
-    index_bc = barcodes[prefix_date_and_id[RUN-1]].index(bc)#index of the barcode bc in the barcodes list
-    #barcodes_to_test = barcodes[prefix_date_and_id[RUN-1]][:index_bc]+barcodes[prefix_date_and_id[RUN-1]][index_bc+1:]#list of barcodes - {bc}
-    barcodes_to_test = [i for i in dict_ref_seq.keys() if (i!=(RUN,barcode))]
+    print 'RUN - barcode: '+str(true_seq_id)+':'
+    #index_bc = barcodes[prefix_date_and_id[RUN-1]].index(bc)#index of the barcode bc in the barcodes list
+    barcodes_to_test = [ref_seq_bc for ref_seq_bc in dict_ref_seq.keys() if (ref_seq_bc != true_seq_id)]
 
-    # loop for pIDs with occ >= 3
-    print 'loop for pIDs with occ >= 3'
-    for pID in dict_score_alignments.keys():
-        if (dict_score_alignments[pID] < dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
+    
+
+
+    for pID,align_scores in dict_score_alignments.iteritems():
+        if(max(align_scores) < len(dict_ref_seq[true_seq_id]) - DIST_MAX):
             # if the alignment score of cons. seq. for pID with the reference sequence for bc is lower than the threshold
-            print '---found 1 bad alignment: '+pID+', '+str(dict_score_alignments[pID])+' < '+str(dict_len_ref_seq[(RUN,barcode)]-DIST_MAX)
+            print '----found 1 bad alignment: '+pID+', '+str(dict_score_alignments[pID])+' < '+str(len(dict_ref_seq[true_seq_id])-DIST_MAX)
             dict_possible_good_align[pID]=[]
             dict_reclassif[pID]=[]
+            is_a_thrice_or_more = pID in dict_cons_seq.keys()
+            is_a_twice_with_distinct_reads = len(align_scores)==2
+            for ref_seq_id_2 in barcodes_to_test:# compare the alignment scores of cons. seq. with the ref. seq. for the other barcodes
+                if is_a_thrice_or_more:
+                    score_align_with_ref_seq_id_2 = lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_cons_seq[pID][2])[2]
+                elif is_a_twice_with_distinct_reads:
+                    score_align_with_ref_seq_id_2 = max([lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_all_reads[pID][i][2])[2] for i in [0,1]])
+                else: # is a once
+                    score_align_with_ref_seq_id_2 = lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_all_reads[pID][0][2])[2]
 
-            for (run2,bc2) in barcodes_to_test: # compare the alignment scores of cons. seq. pID with the ref. seq. for the other barcodes
-                score_align_with_bc2 = lt.align_SW_dist(dict_ref_seq[(run2,bc2)], dict_cons_seq[pID])[2]
-                dict_possible_good_align[pID].append((run2,bc2,score_align_with_bc2))
-                if(score_align_with_bc2 >= dict_len_ref_seq[(run2,bc2)]-DIST_MAX):
-                    print '------possible reclassif of pID '+pID+' (#occ: '+str(dict_pIDs_occ[pID])+') in run '+str(run2) +', bc2 '+bc2+', with align score: '+str(score_align_with_bc2)+' >= '+str(dict_len_ref_seq[(run2,bc2)]-DIST_MAX)
-                    dict_count_reclassif_pIDs[(run2,bc2)]+=1
-                    dict_count_reclassif_reads[(run2,bc2)]+=dict_pIDs_occ[pID]
-                    dict_reclassif[pID].append((run2,bc2,score_align_with_bc2))
+                dict_possible_good_align[pID].append((ref_seq_id_2,score_align_with_ref_seq_id_2))
+                if(score_align_with_ref_seq_id_2 >= len(dict_ref_seq[ref_seq_id_2])-DIST_MAX):
+                    print '------possible reclassif of pID '+pID+' in ref_seq_id_2 '+str(ref_seq_id_2)+', with align score: '+str(score_align_with_ref_seq_id_2)+' >= '+str(len(dict_ref_seq[ref_seq_id_2])-DIST_MAX)
+                    dict_count_reclassif_pIDs[ref_seq_id_2]+=1
+                    dict_count_reclassif_reads[ref_seq_id_2]+=sum([sum(map(int,np.array(dict_all_reads[pID])[:,i])) for i in [0,1]]) #dict_pIDs_occ[pID]
+                    dict_reclassif[pID].append((ref_seq_id_2,score_align_with_ref_seq_id_2))
 
-            #for bc3 in barcodes[prefix_date_and_id[RUN%2]]: # compare the alignment scores of cons. seq. pID with the ref. seq. for the barcodes of the other run
-            #    score_align_with_bc3 = align_SW_dist(dict_scsp[((RUN%2)+1,bc3)], dict_cons_seq[(RUN,bc)][pID])[2]
-            #    dict_possible_good_align[(RUN,bc)][pID].append(((RUN%2)+1,bc3,score_align_with_bc3))
-            #    if(score_align_with_bc3 >= dict_lim_min_score_align[((RUN%2)+1, bc3)]):
-            #        print '------possible reclassif of pID '+pID+' (#occ: '+str(dict_pIDs_occ[(RUN,bc)][pID])+') in run '+str((RUN%2)+1)+', bc3 '+bc3+', with align score: '+str(score_align_with_bc3)+' >= '+str(dict_lim_min_score_align[((RUN%2)+1, bc3)])
-            #        dict_count_reclassif_pIDs[(RUN,bc)][((RUN%2)+1,bc3)]+=1
-            #        dict_count_reclassif_reads[(RUN,bc)][((RUN%2)+1,bc3)]+=dict_pIDs_occ[(RUN,bc)][pID]
-            #        dict_reclassif[(RUN,bc)][pID].append(((RUN%2)+1,bc3,score_align_with_bc3))
+    # # loop for pIDs with occ >= 3
+    # # print 'loop for pIDs with occ >= 3'
+    # for pID in dict_score_alignments.keys():
+    #     if (dict_score_alignments[pID] < len(dict_ref_seq[true_seq_id])-DIST_MAX):
+    #         # if the alignment score of cons. seq. for pID with the reference sequence for bc is lower than the threshold
+    #         print '---found 1 bad alignment: '+pID+', '+str(dict_score_alignments[pID])+' < '+str(dict_len_ref_seq[(RUN,barcode)]-DIST_MAX)
+    #         dict_possible_good_align[pID]=[]
+    #         dict_reclassif[pID]=[]
 
+    #         for (run2,bc2) in barcodes_to_test: # compare the alignment scores of cons. seq. pID with the ref. seq. for the other barcodes
+    #             score_align_with_bc2 = lt.align_SW_dist(dict_ref_seq[(run2,bc2)], dict_cons_seq[pID])[2]
+    #             dict_possible_good_align[pID].append((run2,bc2,score_align_with_bc2))
+    #             if(score_align_with_bc2 >= dict_len_ref_seq[(run2,bc2)]-DIST_MAX):
+    #                 print '------possible reclassif of pID '+pID+' (#occ: '+str(dict_pIDs_occ[pID])+') in run '+str(run2) +', bc2 '+bc2+', with align score: '+str(score_align_with_bc2)+' >= '+str(dict_len_ref_seq[(run2,bc2)]-DIST_MAX)
+    #                 dict_count_reclassif_pIDs[(run2,bc2)]+=1
+    #                 dict_count_reclassif_reads[(run2,bc2)]+=dict_pIDs_occ[pID]
+    #                 dict_reclassif[pID].append((run2,bc2,score_align_with_bc2))
 
-    # loop for pIDs with 1 <= occ <= 2
-    print 'loop for pIDs with 1 <= occ <=2'
-    for pID in dict_score_alignments_once_twice.keys():
-        if (max(dict_score_alignments_once_twice[pID]) < dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
-            # if the alignment score (occ=1) or the best one (occ=2) for pID with the reference sequence for bc is lower than the threshold
-            print '---found 1 bad alignment: '+pID+', '+str(max(dict_score_alignments_once_twice[pID]))+' < '+str(dict_len_ref_seq[(RUN,barcode)]-DIST_MAX)
-            dict_possible_good_align[pID]=[]
-            dict_reclassif[pID]=[]
-            #nb_occ_cur_pID = len(dict_filtered_reads_pIDs_once_twice[(RUN,bc)][pID])      
-            nb_occ_cur_pID = sum([dict_pIDs_occ_once_twice[pID][i] for i in [0,1]])
+    
+    # # loop for pIDs with 1 <= occ <= 2
+    # print 'loop for pIDs with 1 <= occ <=2'
+    # for pID in dict_score_alignments_once_twice.keys():
+    #     if (max(dict_score_alignments_once_twice[pID]) < dict_len_ref_seq[(RUN,barcode)]-DIST_MAX):
+    #         # if the alignment score (occ=1) or the best one (occ=2) for pID with the reference sequence for bc is lower than the threshold
+    #         print '---found 1 bad alignment: '+pID+', '+str(max(dict_score_alignments_once_twice[pID]))+' < '+str(dict_len_ref_seq[(RUN,barcode)]-DIST_MAX)
+    #         dict_possible_good_align[pID]=[]
+    #         dict_reclassif[pID]=[]
+    #         #nb_occ_cur_pID = len(dict_filtered_reads_pIDs_once_twice[(RUN,bc)][pID])      
+    #         nb_occ_cur_pID = sum([dict_pIDs_occ_once_twice[pID][i] for i in [0,1]])
 
-            for bc2 in barcodes_to_test: # compare the alignment scores of the sequence(s) of pID with the ref. seq. for the other barcodes
-                score_align_with_bc2 = max([lt.align_SW_dist(dict_ref_seq[(run2,bc2)], dict_filtered_reads_pIDs_once_twice[pID][i])[2] for i in range(nb_occ_cur_pID)])
-                dict_possible_good_align[pID].append((run2,bc2,score_align_with_bc2))
-                if(score_align_with_bc2 >= dict_len_ref_seq[(run2,bc2)]-DIST_MAX):
-                    print '------possible reclassif of pID '+pID+' (#occ: '+str(nb_occ_cur_pID)+') in run '+str(run2) +', bc2 '+bc2+', with align score: '+str(score_align_with_bc2)+' >= '+str(dict_len_ref_seq[(run2,bc2)]-DIST_MAX)
-                    dict_count_reclassif_pIDs[(run2,bc2)]+=1
-                    dict_count_reclassif_reads[(run2,bc2)]+=nb_occ_cur_pID
-                    dict_reclassif[pID].append((run2,bc2,score_align_with_bc2))
-
-
-            #for bc3 in barcodes[prefix_date_and_id[RUN%2]]: # compare the alignment scores of the sequence(s) of pID with the ref. seq. for the barcodes of the other run
-            #    score_align_with_bc3 = max([align_SW_dist(dict_scsp[((RUN%2)+1,bc3)], dict_filtered_reads_pIDs_once_twice[(RUN,bc)][pID][i])[2] for i in range(nb_occ_cur_pID)])
-            #    dict_possible_good_align[(RUN,bc)][pID].append(((RUN%2)+1,bc3,score_align_with_bc3))
-            #    if(score_align_with_bc3 >= dict_lim_min_score_align[((RUN%2)+1, bc3)]):
-            #        print '------possible reclassif of pID '+pID+' (#occ: '+str(nb_occ_cur_pID)+') in run '+str((RUN%2)+1)+', bc3 '+bc3+', with align score: '+str(score_align_with_bc3)+' >= '+str(dict_lim_min_score_align[((RUN%2)+1, bc3)])
-            #        dict_count_reclassif_pIDs[(RUN,bc)][((RUN%2)+1,bc3)]+=1
-            #        dict_count_reclassif_reads[(RUN,bc)][((RUN%2)+1,bc3)]+=dict_pIDs_occ_once_twice[(RUN,bc)][pID]
-            #        dict_reclassif[(RUN,bc)][pID].append(((RUN%2)+1,bc3,score_align_with_bc3))
+    #         for bc2 in barcodes_to_test: # compare the alignment scores of the sequence(s) of pID with the ref. seq. for the other barcodes
+    #             score_align_with_bc2 = max([lt.align_SW_dist(dict_ref_seq[(run2,bc2)], dict_filtered_reads_pIDs_once_twice[pID][i])[2] for i in range(nb_occ_cur_pID)])
+    #             dict_possible_good_align[pID].append((run2,bc2,score_align_with_bc2))
+    #             if(score_align_with_bc2 >= dict_len_ref_seq[(run2,bc2)]-DIST_MAX):
+    #                 print '------possible reclassif of pID '+pID+' (#occ: '+str(nb_occ_cur_pID)+') in run '+str(run2) +', bc2 '+bc2+', with align score: '+str(score_align_with_bc2)+' >= '+str(dict_len_ref_seq[(run2,bc2)]-DIST_MAX)
+    #                 dict_count_reclassif_pIDs[(run2,bc2)]+=1
+    #                 dict_count_reclassif_reads[(run2,bc2)]+=nb_occ_cur_pID
+    #                 dict_reclassif[pID].append((run2,bc2,score_align_with_bc2))
 
 
 
     #7.print contamination statistics
-
+####
+# CONTINUE HERE
+####
     # for bc in barcodes[prefix_date_and_id[RUN-1]]:
     count_pIDs_reclassif = 0
     count_pIDs_no_good_alignments = 0
@@ -205,27 +212,18 @@ if (len(sys.argv)==5):
         else:
             count_pIDs_no_good_alignments +=1
             if pID in dict_pIDs_occ.keys():
-                count_reads_no_good_alignments += dict_pIDs_occ[pID]
+                count_reads_no_good_alignments += dict_pIDs_occ[pID][0] + dict_pIDs_occ[pID][1]
             else:
-                count_reads_no_good_alignments += sum([dict_pIDs_occ_once_twice[pID][i] for i in [0,1]]) #dict_pIDs_occ_once_twice[(RUN,bc)][pID]
+                count_reads_no_good_alignments += dict_pIDs_occ_once_twice[pID]
 
     print 'RUN '+str(RUN)+' - barcode '+barcode+': #pIDs with better alignments from other barcodes: '+str(count_pIDs_reclassif)
     print '-----> #pIDs with no good alignments: '+ str(count_pIDs_no_good_alignments)
     print '-----> #reads with no good alignments: '+ str(count_reads_no_good_alignments)
     print '##########'
-    #for bc in barcodes[prefix_date_and_id[RUN-1]]:
-    #print 'RUN '+str(RUN)+' - barcode '+barcode+':'
-    #print '--> #pIDs from:  '+str(dict_count_reclassif_pIDs[(RUN,bc)])
-    #print '--> #reads from: '+str(dict_count_reclassif_reads[(RUN,bc)])
-
 
 
     #8.decontaminate the filtered reads (neighbors-indels) file
-    #dict_count_pIDs_to_bad_aligned_file={}
-    #dict_count_pIDs_from_contamination={}
-    #dict_count_pIDs_to_decontaminated_file={}
 
-    # for bc in barcodes[prefix_date_and_id[RUN-1]]:
     dict_count_pIDs_to_bad_aligned_file=defaultdict(int)
     dict_count_pIDs_from_contamination=defaultdict(int)
     dict_count_pIDs_to_decontaminated_file=defaultdict(int)

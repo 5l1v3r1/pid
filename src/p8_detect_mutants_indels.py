@@ -32,11 +32,11 @@ DIST_MAX = 3
 # minimum #times a pID must occur to have neighbors 
 MIN_OCC_MOST_ABUND_PID = 10
 
-min_pid_alignment_score = 8.4
-# anyting >9 does not allow any substitions
-# anythin >8.4 allows only one point mutation
-# >8 allows one indel and one substitution
-
+max_pid_alignment_dist = 1.6
+# anything <1 does not allow any substitions
+# 1 allows only one point mutation
+# 1.6 allows one indel and one substitution
+# alignment parameters: match=1, unmatch=0, opening gap penalty=-0.6, gap extension penalty=-0.3
 
 
 ########
@@ -49,7 +49,7 @@ if (len(sys.argv) == 3):
     barcode_dir = str(sys.argv[1]).rstrip('/')+'/'
     readtype = sys.argv[2]
       
-    # 1. Create the dictionary of pIDs (from the output files of p1_trim_and_filter)
+    # Create the dictionary of pIDs (from the output files of p1_trim_and_filter)
 
     ###################################
     # -- READ THE FILTERED READS FILE #
@@ -116,7 +116,7 @@ if (len(sys.argv) == 3):
              if((dict_neighbor_state_pIDs[pID_r[1]] == False) and (pID_r[0] < pID_a[0])):
                 pIDs_align_score = align.localms(pID_a[1], pID_r[1], 1, 0, -0.6, -0.3)
                 if (len(pIDs_align_score) != 0): # if pID_a[1] and pID_r[1] can be aligned
-                    if (pIDs_align_score[0][2] >= min_pid_alignment_score):
+                    if (pIDs_align_score[0][2] >= len(pID_a[1]) - max_pid_alignment_dist):
                         print 'pID_a: '+str(pID_a)+', pID_r: '+str(pID_r)
                         print pIDs_align_score[0][0], pIDs_align_score[0][1]
                         print dict_neighbor_state_pIDs[pID_a[1]], dict_neighbor_state_pIDs[pID_r[1]]
@@ -128,13 +128,18 @@ if (len(sys.argv) == 3):
                             neighbor_candidates = dict_all_reads[pID_r[1]]
 
 
-                        if (pID_r[0] != 2): # pID_r occurs once or more than twice: only one sequence comparison to do
-                            seq_a = dict_cons_seq[pID_a[1]][0][2] 
-                            if(pID_r[0] == 1): # pID_r occurs once: its sequence is in dict_all_reads
+                        seq_a = dict_cons_seq[pID_a[1]][0][2] 
+                        #if (pID_r[0] != 2 or (pID_r[0] == 2 and len(dict_all_reads[pID_r[1]])==1)): # pID_r occurs once or more than twice, or twice with identical reads: only one sequence comparison to do
+                            #if(pID_r[0] <= 2): # pID_r occurs once or twice (with identical reads): its sequence is in dict_all_reads
                                 # seq_r = dict_all_reads[pID_r[0]][0][2]
-                                seq_r = dict_all_reads[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
-                            else: # pID_r occurs at least 3 times: its consensus sequence is in dict_cons_seq
-                                seq_r = dict_cons_seq[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
+                                #seq_r = dict_all_reads[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
+                            #else: # pID_r occurs at least 3 times: its consensus sequence is in dict_cons_seq
+                                #seq_r = dict_cons_seq[pID_r[1]][0][2] # [nb_fwd,nb_rev,seq]
+                        #else: # pID_r occurs twice with distinct reads: if one read aligns well: pID_r is considered as a mutant
+                            #[seq_r_0,seq_r_1] = [dict_all_reads[pID_r[1]][i][2] for i in [0,1]]
+                            
+                        #if(pID_)
+
 
                         for nf, nr, seq_r in neighbor_candidates:
                             if lt.check_neighbor_plausibility(seq_a, seq_r, DIST_MAX):
@@ -147,8 +152,8 @@ if (len(sys.argv) == 3):
 
     print 'neighbors:'
     nb_neighbors_stated = 0
-    for pID in dict_neighbor_state_pIDs.keys():
-        if dict_neighbor_state_pIDs[pID]==True:
+    for pID,state in dict_neighbor_state_pIDs.iteritems():
+        if state:
             nb_neighbors_stated += 1
             print pID
 
@@ -160,7 +165,6 @@ if (len(sys.argv) == 3):
     count_reads_written = 0
     count_neighbors_reads_written = 0
 
-    #with open(filtered_reads_file_name[:-3]+'_neighbors_indels.fa', 'w') as neighbors_filtered_reads_file:
     # write the new filtered reads file (mutant-indels):
     corrected_aligned_reads_fname = barcode_dir+'corrected_reads.fasta'
     with open(corrected_aligned_reads_fname, 'w') as neighbors_filtered_reads_file:
@@ -170,9 +174,9 @@ if (len(sys.argv) == 3):
 
                 # write the reads corresponding to pID
                 for cur_read in dict_all_reads[pID]: # cur_read is a list [nb_occ_fwd,nb_occ_rev,seq]
-                    pid_orig = pID
-                    mut_flag = ''
-                    new_read_id = str(pID+'_'+str(cur_read[0])+'_'+str(cur_read[1])+'_'+pid_orig+mut_flag)
+                    #pid_orig = pID
+                    #mut_flag = ''
+                    new_read_id = str(pID+'_'+str(cur_read[0])+'_'+str(cur_read[1])+'_'+pID)
                     neighbors_filtered_reads_file.write('>'+new_read_id+'\n') # write the new id of the read
                     neighbors_filtered_reads_file.write(cur_read[2]+'\n') # write the sequence
                     count_reads_written += (cur_read[0]+cur_read[1])
