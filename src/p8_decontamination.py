@@ -55,7 +55,7 @@ if (len(sys.argv)==5):
         if pID in dict_cons_seq:
             score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], dict_cons_seq[pID][2])[2]
             print '----'+str(RUN)+': '+barcode+' - '+pID+': '+pID+', align score: '+str(score_align)
-            dict_score_alignments[pID]=[score_align]
+            dict_score_alignments[pID].append(score_align)
         else:
             for nf, nb, seq in dict_all_reads[pID]:
                 score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], dict_cons_seq[pID][2])[2]
