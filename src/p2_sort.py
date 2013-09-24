@@ -60,24 +60,23 @@ if (len(sys.argv) ==3):
                 pID = str(record.id.split('_')[0])
                 dict_pIDs[pID].append((record.id,record.seq))
                 
-                all_pIDs = sorted(dict_pIDs.keys())
+        all_pIDs = sorted(dict_pIDs.keys())
 
         
-        if(len(all_pIDs)>0): #avoids creation of temp dirs from previous barcode if the current reads file is empty...
-            batch=0
-            for pii, pID in enumerate(all_pIDs):
-                if((pii%batchsize)==0):
-                    batch=pii/batchsize
-                    temp_pid_files_dir =bc_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
-                    print 'pii: '+str(pii)+', '+temp_pid_files_dir
-                    lt.check_and_create_directory(temp_pid_files_dir)
-                with open(temp_pid_files_dir+'/'+ pID+'.fasta', 'w') as output_pID_file:
-                    for read in dict_pIDs[pID]:
-                        output_pID_file.write(str('>'+read[0]+'\n'))
-                        output_pID_file.write(str(read[1]+'\n'))
-                        count+=1
-                        if(count%500==0):
-                            print 'count = ' + str(count)
+        batch=0
+        for pii, pID in enumerate(all_pIDs):
+            if((pii%batchsize)==0):
+                batch=pii/batchsize
+                temp_pid_files_dir =bc_dir+'/temp_'+readtype+'_'+"{0:04d}".format(batch)
+                print 'pii: '+str(pii)+', '+temp_pid_files_dir
+                lt.check_and_create_directory(temp_pid_files_dir)
+            with open(temp_pid_files_dir+'/'+ pID+'.fasta', 'w') as output_pID_file:
+                for read in dict_pIDs[pID]:
+                    output_pID_file.write(str('>'+read[0]+'\n'))
+                    output_pID_file.write(str(read[1]+'\n'))
+                    count+=1
+                    if(count%500==0):
+                        print 'count = ' + str(count)
                                     
         print 'total : ' + str(count)
         #else:

@@ -44,7 +44,8 @@ def make_consensus(file_name):
         str_consensus = "".join(alpha[np.argmax(nuc_counts, axis=0)])
         
         #remove gaps
-        str_consensus_2 = "".join([nuc for nuc in str_consensus if nuc!='-'])
+        #str_consensus_2 = "".join([nuc for nuc in str_consensus if nuc!='-'])
+        str_consensus_2 = lt.remove_gaps(str_consensus)
 
         return (str_consensus_2, np.sum(nb_reads_fwd), np.sum(nb_reads_rev))    
     else:
@@ -83,7 +84,7 @@ if __name__=='__main__':
                         if consensus_seq[1]+consensus_seq[2]>2:
                             consensus_file.write('>'+lt.read_label(pID, consensus_seq[1], consensus_seq[2])+'\n')
                             consensus_file.write(consensus_seq[0]+'\n')
-
+                                
                     shutil.rmtree(temp_dir)
     else:
         print auto_file_name+': usage: '+auto_file_name+' <run directory> <read type to work on>'

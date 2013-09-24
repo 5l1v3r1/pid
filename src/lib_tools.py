@@ -115,3 +115,6 @@ def check_neighbor_plausibility(seq1, seq2, distance_cutoff, verbose = False):
         print score[0]
         print score[1]
     return (score[2] >= len(seq1) - DIST_MAX)
+
+def remove_gaps(seq):
+    return seq.replace('-','')

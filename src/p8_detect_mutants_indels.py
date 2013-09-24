@@ -91,44 +91,46 @@ if (len(sys.argv) == 3):
     for pID in dict_all_reads.keys():
         dict_neighbor_state_pIDs[pID] = False
 
-    list_occ_pIDs_dec = sorted(pID_abundance.items(), key = lambda x:x[0], reverse=True)
+    list_occ_pIDs_dec = sorted(pID_abundance.items(), key = lambda x:x[1], reverse=True)
     list_occ_pIDs_inc = list_occ_pIDs_dec[::-1]
 
     print 'Check list_occ_pIDs_dec and list_occ_pIDs_inc lengths (should be equal): '        
     print len(list_occ_pIDs_dec), len(list_occ_pIDs_inc)
-
+    #print list_occ_pIDs_dec
+    #print list_occ_pIDs_inc
     # dictionary containing the parent pID (values) of a given pID (keys)
     dict_neighbor_of = defaultdict(list)
     dict_neighbors = defaultdict(list)
 
-    lim_pID_a = [list_occ_pIDs_inc[i][0]>=MIN_OCC_MOST_ABUND_PID for i in range(len(list_occ_pIDs_inc))].count(True)
+    #lim_pID_a = [list_occ_pIDs_inc[i][0]>=MIN_OCC_MOST_ABUND_PID for i in range(len(list_occ_pIDs_inc))].count(True)
+    lim_pID_a = [i[1]>=MIN_OCC_MOST_ABUND_PID for i in list_occ_pIDs_inc].count(True)
     print 'lim_pID_a:'+str(lim_pID_a)
-    print 'nb occ pID_a at pos lim_pID_a-1 in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a-1][0])
-    print 'nb occ pID_a at pos lim_pID_a in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a][0])
+    print 'nb occ pID_a at pos lim_pID_a-1 in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a-1][1])
+    print 'nb occ pID_a at pos lim_pID_a in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a][1])
 
     for ii_a, pID_a in enumerate(list_occ_pIDs_dec[:lim_pID_a]):
         # this condition should always evaluate to true
-        if dict_neighbor_state_pIDs[pID_a[1]] == False:
+        if dict_neighbor_state_pIDs[pID_a[0]] == False:
             continue
         # loop over rare pid
         for ii,pID_r in enumerate(list_occ_pIDs_inc[:-(ii_a+1)]):
             # check whether this PID is already a neighbor of some other
-             if((dict_neighbor_state_pIDs[pID_r[1]] == False) and (pID_r[0] < pID_a[0])):
-                pIDs_align_score = align.localms(pID_a[1], pID_r[1], 1, 0, -0.6, -0.3)
+             if((dict_neighbor_state_pIDs[pID_r[0]] == False) and (pID_r[1] < pID_a[1])):
+                pIDs_align_score = align.localms(pID_a[0], pID_r[0], 1, 0, -0.6, -0.3)
                 if (len(pIDs_align_score) != 0): # if pID_a[1] and pID_r[1] can be aligned
-                    if (pIDs_align_score[0][2] >= len(pID_a[1]) - max_pid_alignment_dist):
+                    if (pIDs_align_score[0][2] >= len(pID_a[0]) - max_pid_alignment_dist):
                         print 'pID_a: '+str(pID_a)+', pID_r: '+str(pID_r)
                         print pIDs_align_score[0][0], pIDs_align_score[0][1]
-                        print dict_neighbor_state_pIDs[pID_a[1]], dict_neighbor_state_pIDs[pID_r[1]]
+                        print dict_neighbor_state_pIDs[pID_a[0]], dict_neighbor_state_pIDs[pID_r[0]]
                         print "possible neighbors"
 
-                        if pID_r[0]>2: 
-                            neighbor_candidates = dict_cons_seq[pID_r[1]]
+                        if pID_r[1]>2: 
+                            neighbor_candidates = dict_cons_seq[pID_r[0]]
                         else:
-                            neighbor_candidates = dict_all_reads[pID_r[1]]
+                            neighbor_candidates = dict_all_reads[pID_r[0]]
 
 
-                        seq_a = dict_cons_seq[pID_a[1]][0][2] 
+                        seq_a = dict_cons_seq[pID_a[0]][0][2] 
                         #if (pID_r[0] != 2 or (pID_r[0] == 2 and len(dict_all_reads[pID_r[1]])==1)): # pID_r occurs once or more than twice, or twice with identical reads: only one sequence comparison to do
                             #if(pID_r[0] <= 2): # pID_r occurs once or twice (with identical reads): its sequence is in dict_all_reads
                                 # seq_r = dict_all_reads[pID_r[0]][0][2]
@@ -143,9 +145,9 @@ if (len(sys.argv) == 3):
 
                         for nf, nr, seq_r in neighbor_candidates:
                             if lt.check_neighbor_plausibility(seq_a, seq_r, DIST_MAX):
-                                dict_neighbors[pID_a[1]].append(pID_r[1])
-                                dict_neighbor_of[pID_r[1]] = pID_a[1]
-                                dict_neighbor_state_pIDs[pID_r[1]] = True
+                                dict_neighbors[pID_a[0]].append(pID_r[0])
+                                dict_neighbor_of[pID_r[0]] = pID_a[0]
+                                dict_neighbor_state_pIDs[pID_r[0]] = True
                                 print "NEIGHBORS !"
                                 break
 
@@ -166,7 +168,7 @@ if (len(sys.argv) == 3):
     count_neighbors_reads_written = 0
 
     # write the new filtered reads file (mutant-indels):
-    corrected_aligned_reads_fname = barcode_dir+'corrected_reads.fasta'
+    corrected_aligned_reads_fname = barcode_dir+'corrected_aligned_reads.fasta'
     with open(corrected_aligned_reads_fname, 'w') as neighbors_filtered_reads_file:
         for pID in dict_all_reads.keys(): # for all pIDs                                
             if not dict_neighbor_state_pIDs[pID]: # if pID "is not a neighbor"
