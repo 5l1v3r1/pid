@@ -41,7 +41,7 @@ if (len(sys.argv)==5):
 
     #2.parse the consensus sequences files for the given prefix_date_and_id in dict_cons_seq
     dict_cons_seq, a,b = lt.parse_readfile(barcode_dir+'consensus_sequences_'+readtype+'.fasta')
-    print dict_cons_seq
+    
     
     #/!\ : aligned reads: need to trim the gaps at one point
     dict_all_reads, nreads, nbadreads = lt.parse_readfile(barcode_dir+'aligned_reads_'+readtype+'.fasta')
@@ -49,14 +49,15 @@ if (len(sys.argv)==5):
     dict_score_alignments = defaultdict(list)
     for pID in dict_all_reads:
         if pID in dict_cons_seq:
-            print 'FLAG:'
-            print dict_cons_seq[pID]
-            score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], dict_cons_seq[pID][0][2])[2]
+            #print 'FLAG:'
+            #print dict_cons_seq[pID]
+            tmp_cons_seq = dict_cons_seq[pID][0][2]
+            score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], tmp_cons_seq)[2]
             print '----'+str(true_seq_id)+': '+pID+', align score: '+str(score_align)
             dict_score_alignments[pID].append(score_align)
         else:
             for nf, nb, seq in dict_all_reads[pID]:
-                score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], seq)[2]
+                score_align = lt.align_SW_dist(dict_ref_seq[true_seq_id], lt.remove_gaps(seq))[2]
                 print '----'+str(true_seq_id)+': '+pID+', align score: '+str(score_align)
                 dict_score_alignments[pID].append(score_align)
 
@@ -76,17 +77,17 @@ if (len(sys.argv)==5):
     #5.count good and bad alignments
     
 
-    count_bad_scores = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
-    nb_bad_scores_reads = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
-    count_good_scores = sum([sum([x>=len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
-    nb_good_scores_reads = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
+    #count_bad_scores = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
+    #nb_bad_scores_reads = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
+    #count_good_scores = sum([sum([x>=len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
+    #nb_good_scores_reads = sum([sum([x<len(dict_ref_seq[true_seq_id])-DIST_MAX for x in reads]) for reads in dict_score_alignments])
 
                                                                          
-    print '****'
-    print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores: '+str(count_bad_scores)
-    print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores (reads): '+str(nb_bad_scores_reads)
-    print '--RUN-barcode: '+str(true_seq_id)+': #good align scores: '+str(count_good_scores)
-    print '--RUN-barcode: '+str(true_seq_id)+': #good align scores (reads): '+str(nb_good_scores_reads)
+    #print '****'
+    #print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores: '+str(count_bad_scores)
+    #print '--RUN-barcode: '+str(true_seq_id)+': #bad align scores (reads): '+str(nb_bad_scores_reads)
+    #print '--RUN-barcode: '+str(true_seq_id)+': #good align scores: '+str(count_good_scores)
+    #print '--RUN-barcode: '+str(true_seq_id)+': #good align scores (reads): '+str(nb_good_scores_reads)
 
  
     # 6.check contamination
@@ -113,11 +114,10 @@ if (len(sys.argv)==5):
             is_a_twice_with_distinct_reads = len(align_scores)==2
             for ref_seq_id_2 in barcodes_to_test:# compare the alignment scores of cons. seq. with the ref. seq. for the other barcodes
                 if is_a_thrice_or_more:
-                    score_align_with_ref_seq_id_2 = lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_cons_seq[pID][0][2])[2]
-                elif is_a_twice_with_distinct_reads:
-                    score_align_with_ref_seq_id_2 = max([lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_all_reads[pID][i][2])[2] for i in [0,1]])
-                else: # is a once
-                    score_align_with_ref_seq_id_2 = lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], dict_all_reads[pID][0][2])[2]
+                    list_seq = [dict_cons_seq[pID][0][2]]
+                else:
+                    list_seq = [seq[2] for seq in dict_all_reads[pID]]
+                score_align_with_ref_seq_id_2 = max([lt.align_SW_dist(dict_ref_seq[ref_seq_id_2], lt.remove_gaps(seq))[2] for seq in list_seq])
 
                 dict_possible_good_align[pID].append((ref_seq_id_2,score_align_with_ref_seq_id_2))
                 if(score_align_with_ref_seq_id_2 >= len(dict_ref_seq[ref_seq_id_2])-DIST_MAX):
@@ -139,9 +139,8 @@ if (len(sys.argv)==5):
     count_reads_no_good_alignments = 0
     count_reads_good_alignments = 0
 
-    with open(barcode_dir+readtype+'_reads.fasta','r') as filtered_reads_file:
-    #for pID,reads in dict_all_reads.iteritems():
-        for record in SeqIO.parse(filtered_reads_file,'fasta'):
+    with open(barcode_dir+'aligned_reads_'+readtype+'.fasta','r') as aligned_reads_file:
+        for record in SeqIO.parse(aligned_reads_file,'fasta'):
             pID,nb_reads_fwd,nb_reads_rev,pID_orig = record.id.split('_')[0:4]
             nb_reads_fwd = int(nb_reads_fwd)
             nb_reads_rev = int(nb_reads_rev)
@@ -162,12 +161,13 @@ if (len(sys.argv)==5):
         
    # print 'RUN-barcode '+true_seq_id+': #pIDs with better alignments from other barcodes: '+str(count_pIDs_reclassif)
    # print '-----> #pIDs with no good alignments: '+ str(count_pIDs_no_good_alignments)
-   # print '-----> #reads with no good alignments: '+ str(count_reads_no_good_alignments)
-   # print '-----> #reads with good alignments: '+ str(count_reads_good_alignments)
-   # print '##########'
+    print '-----> #reads with no good alignments: '+ str(count_reads_no_good_alignments)
+    print '-----> #reads with good alignments: '+ str(count_reads_good_alignments)
+    print '##########'
 
-    # write the filtered reads decontaminated file
-    with open(barcode_dir+readtype+'_decontaminated_reads.fasta','w') as outfile:
+    # write the decontaminated aligned filtered reads file
+    with open(barcode_dir+'aligned_reads_'+readtype+'_decontaminated.fasta','w') as outfile:
+    #with open(barcode_dir+readtype+'_decontaminated_reads.fasta','w') as outfile:
         print 'write decontaminated file for run-barcode: '+str(true_seq_id)
         for record in list_of_reads_to_write_in_decontaminated_file:
             outfile.write('>'+str(record.id)+'\n')
@@ -175,7 +175,7 @@ if (len(sys.argv)==5):
         print '-- #reads written: '+str(len(list_of_reads_to_write_in_decontaminated_file))
                 
     # write the bad aligned filtered reads file
-    with open(barcode_dir+readtype+'_bad_aligned_reads.fasta','w') as outfile:
+    with open(barcode_dir+'aligned_reads_'+readtype+'_bad_aligned.fasta','w') as outfile:
         print 'write bad aligned reads file for run-barcode: '+str(true_seq_id)
         for record in list_of_reads_to_write_in_bad_aligned_file:
             outfile.write('>'+str(record.id)+'\n')
