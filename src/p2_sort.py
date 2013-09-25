@@ -35,7 +35,7 @@ class struct_var_set:
         #self.templates={}
         self.barcode = 'NYD'
 
-batchsize = 10
+batchsize = 100
 ######
 # MAIN
 ######

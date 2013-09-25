@@ -6,12 +6,11 @@
 # 454 #
 #######
 cfg={
-    'runid':'454_subsample_run1',
+    'runid':'PID_454_run1',
     'p5_virus_match':'GTAGCATGACAAAAATCTTAGAGCC',
     'p3_virus_match':'CATTRCTTTGGATGGGTATGAA',
     'barcodes':['ACG','CAG','GTA', 'GTC'],
-#    'input_data_file':'../data/rawdata_reg2.fsa',
-    'input_data_file':'data/subsample.fasta',
+    'input_data_file':'/ebio/ag-neher/share/data/PID_454/rawdata_reg1.fsa',
     'p5_cutoff': 21,#=len(p5_virus_match)-4
     'p3_cutoff': 18,#=len(p3_virus_match)-4
     'min_occ_same_pid':1,

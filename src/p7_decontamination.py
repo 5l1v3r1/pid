@@ -36,7 +36,7 @@ if (len(sys.argv)==5):
     dict_ref_seq ={}
     with open(ref_seq_file_name, 'r') as infile:
         for seq in SeqIO.parse(infile, 'fasta'):
-            dict_ref_seq[seq.id]=str(seq.seq)
+            dict_ref_seq[seq.description]=str(seq.seq)
 
 
     #2.parse the consensus sequences files for the given prefix_date_and_id in dict_cons_seq
@@ -167,7 +167,6 @@ if (len(sys.argv)==5):
 
     # write the decontaminated aligned filtered reads file
     with open(barcode_dir+'aligned_reads_'+readtype+'_decontaminated.fasta','w') as outfile:
-    #with open(barcode_dir+readtype+'_decontaminated_reads.fasta','w') as outfile:
         print 'write decontaminated file for run-barcode: '+str(true_seq_id)
         for record in list_of_reads_to_write_in_decontaminated_file:
             outfile.write('>'+str(record.id)+'\n')
@@ -181,6 +180,14 @@ if (len(sys.argv)==5):
             outfile.write('>'+str(record.id)+'\n')
             outfile.write(str(record.seq)+'\n')
         print '-- #reads written: '+str(len(list_of_reads_to_write_in_bad_aligned_file))
+
+    # write the consensus sequences file
+    with open(barcode_dir+'consensus_sequences_'+readtype+'_decontaminated.fasta','w') as outfile:
+        print 'write decontaminated file for run-barcode: '+str(true_seq_id)
+        for pID,rec in dict_cons_seq.iteritems():
+            if pID not in dict_reclassif:
+                outfile.write('>'+lt.read_label(pID, rec[0][0], rec[0][1])+'\n')
+                outfile.write(rec[0][2]+'\n')
 
 
     # 9. print decontamination statistics

@@ -141,6 +141,8 @@ def filter_reads(res):
     time_start = time.time()
     with open(str(res.input_data_file), 'r') as seq_file:
         file_format = res.input_data_file.split('.')[-1]
+        if file_format=='fsa':
+            file_format = 'fasta'
         print('opened file '+res.input_data_file+' '+file_format+'\n')
         for record in SeqIO.parse(seq_file, file_format):
             tmp_seq = str(record.seq)

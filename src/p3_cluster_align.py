@@ -22,7 +22,7 @@ if(len(sys.argv)==2):
         list_temp_dirs = glob.glob(analysis_dir+'/temp_*')
         #run one job per file to align on the cluster
         for temp_dir in list_temp_dirs:
-            cmd = 'qsub -cwd -l h_rt=12:00:00 -l h_vmem=10G ./src/p3_align.py '+temp_dir
+            cmd = 'qsub -cwd -l h_rt=00:59:00 -l h_vmem=10G ./src/p3_align.py '+temp_dir
             print cmd
             os.system(cmd)
 

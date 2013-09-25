@@ -168,7 +168,7 @@ if (len(sys.argv) == 3):
     count_neighbors_reads_written = 0
 
     # write the new filtered reads file (mutant-indels):
-    corrected_aligned_reads_fname = barcode_dir+'corrected_aligned_reads.fasta'
+    corrected_aligned_reads_fname = barcode_dir+'corrected_reads.fasta'
     with open(corrected_aligned_reads_fname, 'w') as neighbors_filtered_reads_file:
         for pID in dict_all_reads.keys(): # for all pIDs                                
             if not dict_neighbor_state_pIDs[pID]: # if pID "is not a neighbor"

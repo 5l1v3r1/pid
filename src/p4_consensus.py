@@ -71,7 +71,6 @@ if __name__=='__main__':
 
             with open(consensus_fname, 'w') as consensus_file, \
                     open(aligned_reads_fname, 'w') as aligned_reads_file:
-                print temp_directories
                 for temp_dir in temp_directories:
                     pID_files = glob.glob(temp_dir+'/*aligned.fasta')
                     for pID_file in pID_files:
