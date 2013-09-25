@@ -67,7 +67,7 @@ class struct_var_set:
                 if 'barcode_length_range' in cfg:
                     self.bc_length_range = cfg['barcode_length_range']
                 else:
-                    self.bc_length_range = set(len, self.barcodes)
+                    self.bc_length_range = set(map(len, self.barcodes))
                 # ADDITIONAL variables for trimming and filtering:
                 self.count = 0
                 
@@ -141,6 +141,7 @@ def filter_reads(res):
     time_start = time.time()
     with open(str(res.input_data_file), 'r') as seq_file:
         file_format = res.input_data_file.split('.')[-1]
+        print('opened file '+res.input_data_file+' '+file_format+'\n')
         for record in SeqIO.parse(seq_file, file_format):
             tmp_seq = str(record.seq)
             L = len(tmp_seq)
@@ -184,7 +185,7 @@ def filter_reads(res):
         print "---#good_reads: " + str(len(res.good_reads[bc]))
         
     print 'Total:'
-    print res.count, [len(res.good_reads[bc]) for bc in res.barcodes], [int(np.sum(res.good_read_bad_pID_length[bc])) for bc in res.barcodes]
+    print res.count, [len(res.good_reads[bc]) for bc in res.barcodes], [int(np.sum(res.good_read_bad_pID_length[bc])) for bc in res.barcodes], np.sum(res.bad_read_length)
 
 #####
 def logfile_output(res, barcode):
@@ -277,6 +278,8 @@ def plot_number_of_reads_per_pID(res):
 # MAIN
 ######
 if __name__=='__main__':
+    if len(sys.argv)==2:
+        CONFIG_FILE_NAME = sys.argv[1]
     try:
         execfile(CONFIG_FILE_NAME)
     except:

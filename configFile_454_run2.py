@@ -6,7 +6,7 @@
 # 454 #
 #######
 cfg={
-    'runid':'454_subsample',
+    'runid':'454_subsample_run2',
     'p5_virus_match':'GTAGCATGACAAAAATCTTAGAGCC',
     'p3_virus_match':'CATTRCTTTGGATGGGTATGAA',
     'barcodes':['ACG','CGT','TAC'],
@@ -20,18 +20,3 @@ cfg={
     'barcode_length_range':range(3,5)
 }
 
-##############
-# iontorrent #
-##############
-#cfg={
-#    'runid':'2013-09-23-Run1',
-#    'p5_virus_match':'TGGCAGTCTAGCAGAAGAAG',
-#    'p3_virus_match':'CCTCAGGAGGGGACCCAG',
-#    'barcodes':['TACG','ACGT','CGTA','GTAC'],
-#    'input_data_file':'data/subsample_iontorrent.fastq',
-#    'reverse':False,
-#    'min_occ_same_pid':1,
-#    'min_length_pid':8,
-#    'barcode_length_range':range(3,5)
-#}
-#

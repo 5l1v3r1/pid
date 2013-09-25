@@ -17,7 +17,7 @@ import time
 import lib_tools as lt
 
 auto_file_name = str(sys.argv[0])
-
+verbose = 0
 ######
 # DEF FUNCTIONS
 ######
@@ -49,7 +49,7 @@ def make_consensus(file_name):
 
         return (str_consensus_2, np.sum(nb_reads_fwd), np.sum(nb_reads_rev))    
     else:
-        print 'file: '+file_name+': not enough reads (#reads < 3) to make consensus'
+        if verbose: print 'file: '+file_name+': not enough reads (#reads < 3) to make consensus'
         return ('nothing',0,0)
 #######
 
@@ -74,7 +74,6 @@ if __name__=='__main__':
                 print temp_directories
                 for temp_dir in temp_directories:
                     pID_files = glob.glob(temp_dir+'/*aligned.fasta')
-                    print pID_files
                     for pID_file in pID_files:
                         pID = lt.get_last_part_of_path(pID_file).split('_')[0]
                         with open(pID_file, 'r') as infile:

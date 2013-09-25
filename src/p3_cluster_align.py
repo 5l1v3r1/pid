@@ -27,7 +27,7 @@ if(len(sys.argv)==2):
             os.system(cmd)
 
 else:
-    print auto_file_name+': usage: '+auto_file_name+' <directory of a run>'
+    print sys.argv[1]+': usage: '+auto_file_name+' <directory of a run>'
 
 
 
