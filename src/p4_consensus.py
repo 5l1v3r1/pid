@@ -9,6 +9,7 @@ import numpy as np
 from Bio import AlignIO
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from Bio.Align.Applications import MuscleCommandline
 import os
 import shutil
 import sys
@@ -91,10 +92,10 @@ if __name__=='__main__':
             time_start = time.time()
             aligned_fname = lt.trim_extension(consensus_fname)+'_aligned.fasta'
             try:
-                cline = MuscleCommandline(input = fname, out = aligned_fname)
+                cline = MuscleCommandline(input = consensus_fname, out = aligned_fname)
                 cline()
             except:
-                print "Trouble aligning", fname
+                print "Trouble aligning", consensus_fname
             
             # read all aligned sequences back in, sort them and write to file again
             consensus_seqs, counts_good, counts_bad = lt.parse_readfile(aligned_fname)
