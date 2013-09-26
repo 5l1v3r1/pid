@@ -53,7 +53,7 @@ def parse_read_label(read_label):
     entries = read_label.split('_')
     if len(entries)==3:
         return entries[0], int(entries[1]), int(entries[2]), entries[0]
-    elif len(entries)==4:
+    elif len(entries)>3:
         return entries[0], int(entries[1]), int(entries[2]), entries[3]
     else:
         print "parse_read_label: invalid read label:", read_label
@@ -73,7 +73,7 @@ def parse_readfile(fname):
                 dict_all_reads[pID].append([nb_reads_fwd,nb_reads_rev,seq])
                 count_reads_added_to_dict_all_reads += (nb_reads_fwd+nb_reads_rev)
             else:
-                #print 'Invalid pID: ' + pID
+                print 'Invalid pID: ' + pID
                 count_reads_with_invalid_pID += (nb_reads_fwd+nb_reads_rev)
     return dict_all_reads, count_reads_added_to_dict_all_reads, count_reads_with_invalid_pID
 
@@ -112,9 +112,9 @@ def check_neighbor_plausibility(seq1, seq2, distance_cutoff, verbose = False):
     score = align.localms(seq1, seq2, 1, 0, -1, -1)[0]
     if verbose:
         print 'Alignment score: '+ str(score[2])
-        print score[0]
-        print score[1]
-    return (score[2] >= len(seq1) - DIST_MAX)
+        print len(seq1), score[0]
+        print len(seq2), score[1]
+    return (score[2] >= len(seq1) - distance_cutoff)
 
 def remove_gaps(seq):
     return seq.replace('-','')

@@ -16,9 +16,11 @@ from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 from collections import Counter
 from collections import defaultdict
+from Bio.pairwise2 import align
 from itertools import imap
 import operator
 import sys
+sys.path.append('./src')
 import datetime
 import time
 import lib_tools as lt
@@ -109,8 +111,8 @@ if (len(sys.argv) == 3):
     print 'nb occ pID_a at pos lim_pID_a in list_occ_pIDs_dec: '+str(list_occ_pIDs_dec[lim_pID_a][1])
 
     for ii_a, pID_a in enumerate(list_occ_pIDs_dec[:lim_pID_a]):
-        # this condition should always evaluate to true
-        if dict_neighbor_state_pIDs[pID_a[0]] == False:
+        # this condition should always evaluate to false
+        if dict_neighbor_state_pIDs[pID_a[0]] == True:
             continue
         # loop over rare pid
         for ii,pID_r in enumerate(list_occ_pIDs_inc[:-(ii_a+1)]):
@@ -142,9 +144,8 @@ if (len(sys.argv) == 3):
                             
                         #if(pID_)
 
-
                         for nf, nr, seq_r in neighbor_candidates:
-                            if lt.check_neighbor_plausibility(seq_a, seq_r, DIST_MAX):
+                            if lt.check_neighbor_plausibility(seq_a, seq_r, DIST_MAX, verbose=False):
                                 dict_neighbors[pID_a[0]].append(pID_r[0])
                                 dict_neighbor_of[pID_r[0]] = pID_a[0]
                                 dict_neighbor_state_pIDs[pID_r[0]] = True

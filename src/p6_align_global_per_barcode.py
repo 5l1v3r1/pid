@@ -39,6 +39,15 @@ if(len(sys.argv)==3):
                 cline()
             except:
                 print "Trouble aligning", fname
+            consensus_seqs, counts_good, counts_bad = lt.parse_readfile(aligned_fname)
+            with open(aligned_fname, 'w') as outfile:
+                sorted_pIDs = sorted(consensus_seqs.keys())
+                for pID in sorted_pIDs:
+                    for fwd, rev, seq in consensus_seqs[pID]:
+                        outfile.write('>'+lt.read_label(pID, fwd, rev)+'\n')
+                        outfile.write(seq+'\n')
+                                      
+
         time_end = time.time()
         print 'alignment computation time: ' + str(time_end - time_start)
 

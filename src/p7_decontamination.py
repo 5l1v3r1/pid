@@ -16,6 +16,7 @@ from collections import defaultdict
 import sys
 import datetime
 import time
+sys.path.append('./src/')
 import lib_tools as lt
 
 
@@ -133,60 +134,40 @@ if (len(sys.argv)==5):
     dict_count_pIDs_to_bad_aligned_file=defaultdict(int)
     dict_count_pIDs_from_contamination=defaultdict(int)
     dict_count_pIDs_to_decontaminated_file=defaultdict(int)
-    list_of_reads_to_write_in_bad_aligned_file=[]
-    list_of_reads_to_write_in_decontaminated_file=[]
-    list_of_reads_from_contamination=[]
-    count_reads_no_good_alignments = 0
-    count_reads_good_alignments = 0
 
-    with open(barcode_dir+'aligned_reads_'+readtype+'.fasta','r') as aligned_reads_file:
-        for record in SeqIO.parse(aligned_reads_file,'fasta'):
-            pID,nb_reads_fwd,nb_reads_rev,pID_orig = record.id.split('_')[0:4]
-            nb_reads_fwd = int(nb_reads_fwd)
-            nb_reads_rev = int(nb_reads_rev)
-            read = record.seq
-            if pID in dict_reclassif.keys(): # bad alignment with the associated ref. seq.
-                if len(dict_reclassif[pID])>0: # contamination from an other run/barcode
-                    list_of_reads_from_contamination.append(record)
-                    dict_count_pIDs_from_contamination[pID]+=(nb_reads_fwd+nb_reads_rev)
-                else: # bad alignment with all the ref. seq.
-                    list_of_reads_to_write_in_bad_aligned_file.append(record)
-                    dict_count_pIDs_to_bad_aligned_file[pID]+=(nb_reads_fwd+nb_reads_rev)
-                    count_reads_no_good_alignments += (nb_reads_fwd+nb_reads_rev)
-            else: # good alignment with the associated ref. seq.
-                list_of_reads_to_write_in_decontaminated_file.append(record)
-                dict_count_pIDs_to_decontaminated_file[pID]+= (nb_reads_fwd+nb_reads_rev)
-                count_reads_good_alignments += (nb_reads_fwd+nb_reads_rev)
-    
-        
-   # print 'RUN-barcode '+true_seq_id+': #pIDs with better alignments from other barcodes: '+str(count_pIDs_reclassif)
-   # print '-----> #pIDs with no good alignments: '+ str(count_pIDs_no_good_alignments)
-    print '-----> #reads with no good alignments: '+ str(count_reads_no_good_alignments)
-    print '-----> #reads with good alignments: '+ str(count_reads_good_alignments)
-    print '##########'
-
-    # write the decontaminated aligned filtered reads file
-    with open(barcode_dir+'aligned_reads_'+readtype+'_decontaminated.fasta','w') as outfile:
-        print 'write decontaminated file for run-barcode: '+str(true_seq_id)
-        for record in list_of_reads_to_write_in_decontaminated_file:
-            outfile.write('>'+str(record.id)+'\n')
-            outfile.write(str(record.seq)+'\n')
-        print '-- #reads written: '+str(len(list_of_reads_to_write_in_decontaminated_file))
-                
-    # write the bad aligned filtered reads file
-    with open(barcode_dir+'aligned_reads_'+readtype+'_bad_aligned.fasta','w') as outfile:
-        print 'write bad aligned reads file for run-barcode: '+str(true_seq_id)
-        for record in list_of_reads_to_write_in_bad_aligned_file:
-            outfile.write('>'+str(record.id)+'\n')
-            outfile.write(str(record.seq)+'\n')
-        print '-- #reads written: '+str(len(list_of_reads_to_write_in_bad_aligned_file))
+    with open(barcode_dir+'aligned_reads_'+readtype+'_decontaminated.fasta','w') as outfile_good, \
+            open(barcode_dir+'aligned_reads_'+readtype+'_bad_aligned.fasta','w') as outfile_bad:
+        sorted_pIDs = sorted(dict_all_reads.keys())
+        for pID in sorted_pIDs:
+            if pID in dict_reclassif:
+                read_count=0
+                for read in dict_all_reads[pID]:
+                    outfile_bad.write('>'+lt.read_label(pID, read[0], read[1])+'\n')
+                    outfile_bad.write(read[2]+'\n')
+                    read_count+=read[0] + read[1]
+                if len(dict_reclassif[pID])>0:
+                    dict_count_pIDs_from_contamination[pID] = read_count
+                else:
+                    dict_count_pIDs_to_bad_aligned_file[pID] = read_count
+            else:
+                read_count=0
+                for read in dict_all_reads[pID]:
+                    outfile_good.write('>'+lt.read_label(pID, read[0], read[1])+'\n')
+                    outfile_good.write(read[2]+'\n')                
+                    read_count+=read[0] + read[1]
+                dict_count_pIDs_to_decontaminated_file[pID]+=read_count
+         print '-- # good reads written: '+str(sum(dict_count_pIDs_to_decontaminated_file.values()))
+         print '-- # contaminant reads written: '+str(sum(dict_count_pIDs_from_contamination.values()))
+         print '-- # reads of unknown origin written: '+str(sum(dict_count_pIDs_to_bad_aligned_file.values()))
 
     # write the consensus sequences file
     with open(barcode_dir+'consensus_sequences_'+readtype+'_decontaminated.fasta','w') as outfile:
         print 'write decontaminated file for run-barcode: '+str(true_seq_id)
-        for pID,rec in dict_cons_seq.iteritems():
+        consensus_pIDs = sorted(dict_cons_seq.keys())
+        for pID in consensus_pIDs:
             if pID not in dict_reclassif:
-                outfile.write('>'+lt.read_label(pID, rec[0][0], rec[0][1])+'\n')
+                rec = dict_cons_seq[pID][0]
+                outfile.write('>'+lt.read_label(pID, rec[0], rec[1])+'\n')
                 outfile.write(rec[0][2]+'\n')
 
 
